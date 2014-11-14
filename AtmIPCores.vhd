@@ -36,20 +36,23 @@ package AtmIPCores is
 	ATTRIBUTE SYN_BLACK_BOX OF CCLK_MMCM : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF CCLK_MMCM : COMPONENT IS "CLK_100MHZ_IN,CLK_100MHz,CLK_200MHz,CLK_400MHz,reset,locked";
 
-	component TEST_MMCM
+	component TRIG_MMCM
 	port
 	(
-		CLK_100MHZ_IN  : in     std_logic;
+		-- Clock in ports
+		CLK_100MHZ_IN           : in     std_logic;
 
 		-- Clock out ports
-		CLK_100MHZ     : out    std_logic;
-		CLK_125MHZ     : out    std_logic;
+		TRIG_100MHZ          : out    std_logic;
+		TRIG_400MHZ          : out    std_logic;
 
 		-- Status and control signals
-		RESET          : in     std_logic;
-		LOCKED         : out    std_logic
+		RESET             : in     std_logic;
+		LOCKED            : out    std_logic
 	);
 	end component;
+	ATTRIBUTE SYN_BLACK_BOX OF TRIG_MMCM : COMPONENT IS TRUE;
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF TRIG_MMCM : COMPONENT IS "CLK_100MHZ_IN,TRIG_100MHZ,TRIG_400MHZ,RESET,LOCKED";
 
 	component TRIG_FIFO
 	port
@@ -85,6 +88,21 @@ package AtmIPCores is
 	end component;
 	ATTRIBUTE SYN_BLACK_BOX OF TIO_FIFO : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF TIO_FIFO : COMPONENT IS "rst,wr_clk,rd_clk,din[7:0],wr_en,rd_en,dout[7:0],full,empty,prog_full";
+
+	component SEROUT8
+	port (
+		data_out_to_pins_p : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+		data_out_to_pins_n : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+
+		clk_in : IN STD_LOGIC;
+		clk_div_in : IN STD_LOGIC;
+
+		data_out_from_device : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		io_reset : IN STD_LOGIC
+	);
+	end component;
+	ATTRIBUTE SYN_BLACK_BOX OF SEROUT8 : COMPONENT IS TRUE;
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF SEROUT8 : COMPONENT IS "data_out_to_pins_p[0:0],data_out_to_pins_n[0:0],clk_in,clk_div_in,data_out_from_device[7:0],io_reset";
 	
 	COMPONENT SFP_GIGE
 	  PORT (

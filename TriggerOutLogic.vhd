@@ -33,6 +33,8 @@ use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
+use work.AtmIPCores.all;
+
 entity TriggerOutLogic is
 port
 (
@@ -56,61 +58,6 @@ end TriggerOutLogic;
 
 
 architecture behavior of TriggerOutLogic is
-
-COMPONENT SEROUT8
-PORT
-(
-  data_out_to_pins_p : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-  data_out_to_pins_n : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-
-  clk_in : IN STD_LOGIC;
-  clk_div_in : IN STD_LOGIC;
-
-  data_out_from_device : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-  io_reset : IN STD_LOGIC
-);
-END COMPONENT;
-
-COMPONENT TRIG_FIFO
-PORT
-(
-  rst : IN STD_LOGIC;
-  wr_clk : IN STD_LOGIC;
-  rd_clk : IN STD_LOGIC;
-  din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-  wr_en : IN STD_LOGIC;
-  rd_en : IN STD_LOGIC;
-  dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-  full : OUT STD_LOGIC;
-  empty : OUT STD_LOGIC;
-  prog_full : OUT STD_LOGIC
-);
-END COMPONENT;
-
-COMPONENT TIO_FIFO
-  PORT (
-    rst : IN STD_LOGIC;
-    wr_clk : IN STD_LOGIC;
-    rd_clk : IN STD_LOGIC;
-    din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-    wr_en : IN STD_LOGIC;
-    rd_en : IN STD_LOGIC;
-    dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-    full : OUT STD_LOGIC;
-    empty : OUT STD_LOGIC;
-    prog_full : OUT STD_LOGIC
-  );
-END COMPONENT;
-
-ATTRIBUTE SYN_BLACK_BOX : BOOLEAN;
-ATTRIBUTE SYN_BLACK_BOX OF SEROUT8 : COMPONENT IS TRUE;
-ATTRIBUTE SYN_BLACK_BOX OF TRIG_FIFO : COMPONENT IS TRUE;
-ATTRIBUTE SYN_BLACK_BOX OF TIO_FIFO : COMPONENT IS TRUE;
-
-ATTRIBUTE BLACK_BOX_PAD_PIN : STRING;
-ATTRIBUTE BLACK_BOX_PAD_PIN OF SEROUT8 : COMPONENT IS "data_out_to_pins_p[0:0],data_out_to_pins_n[0:0],clk_in,clk_div_in,data_out_from_device[7:0],io_reset";
-ATTRIBUTE BLACK_BOX_PAD_PIN OF TRIG_FIFO : COMPONENT IS "rst,wr_clk,rd_clk,din[7:0],wr_en,rd_en,dout[7:0],full,empty,prog_full";
-ATTRIBUTE BLACK_BOX_PAD_PIN OF TIO_FIFO : COMPONENT IS "rst,wr_clk,rd_clk,din[7:0],wr_en,rd_en,dout[7:0],full,empty,prog_full";
 
 signal ClkOutP     : STD_LOGIC_VECTOR(0 DOWNTO 0);
 signal ClkOutN     : STD_LOGIC_VECTOR(0 DOWNTO 0);
@@ -213,7 +160,7 @@ begin
     dout        => TrigDat,
     full        => open ,
     empty       => TrigEmpty,
-    prog_full  => TRIG_AFULL
+    prog_full   => TRIG_AFULL
   );
   
 end behavior;
