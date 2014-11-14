@@ -206,29 +206,90 @@ package AtmIPCores is
 	ATTRIBUTE SYN_BLACK_BOX OF UDPOutputBufferFIFO2 : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF UDPOutputBufferFIFO2 : COMPONENT IS "s_aclk,s_aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[7:0],s_axis_tlast,m_axis_tvalid,m_axis_tready,m_axis_tdata[7:0],m_axis_tlast";
 
-	COMPONENT XADC_Temperature
-	  PORT (
-	    di_in : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-	    daddr_in : IN STD_LOGIC_VECTOR(6 DOWNTO 0);
-	    den_in : IN STD_LOGIC;
-	    dwe_in : IN STD_LOGIC;
-	    drdy_out : OUT STD_LOGIC;
-	    do_out : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-	    dclk_in : IN STD_LOGIC;
-	    reset_in : IN STD_LOGIC;
-	    vp_in : IN STD_LOGIC;
-	    vn_in : IN STD_LOGIC;
-	    channel_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-	    eoc_out : OUT STD_LOGIC;
-	    alarm_out : OUT STD_LOGIC;
-	    eos_out : OUT STD_LOGIC;
-	    busy_out : OUT STD_LOGIC
-	  );
+	COMPONENT XADC_TEMPERATURE
+	PORT (
+		di_in : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		daddr_in : IN STD_LOGIC_VECTOR(6 DOWNTO 0);
+		den_in : IN STD_LOGIC;
+		dwe_in : IN STD_LOGIC;
+		drdy_out : OUT STD_LOGIC;
+		do_out : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+		dclk_in : IN STD_LOGIC;
+		reset_in : IN STD_LOGIC;
+		vp_in : IN STD_LOGIC;
+		vn_in : IN STD_LOGIC;
+		channel_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
+		eoc_out : OUT STD_LOGIC;
+		alarm_out : OUT STD_LOGIC;
+		eos_out : OUT STD_LOGIC;
+		busy_out : OUT STD_LOGIC
+	);
 	END COMPONENT;
-	ATTRIBUTE SYN_BLACK_BOX OF XADC_Temperature : COMPONENT IS TRUE;
-	ATTRIBUTE BLACK_BOX_PAD_PIN OF XADC_Temperature : COMPONENT IS "di_in[15:0],daddr_in[6:0],den_in,dwe_in,drdy_out,do_out[15:0],dclk_in,reset_in,vp_in,vn_in,channel_out[4:0],eoc_out,alarm_out,eos_out,busy_out";
+	ATTRIBUTE SYN_BLACK_BOX OF XADC_TEMPERATURE : COMPONENT IS TRUE;
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF XADC_TEMPERATURE : COMPONENT IS "di_in[15:0],daddr_in[6:0],den_in,dwe_in,drdy_out,do_out[15:0],dclk_in,reset_in,vp_in,vn_in,channel_out[4:0],eoc_out,alarm_out,eos_out,busy_out";
 
+	component ApsMsgProc
+	port (
+		-- Interface to MAC to get Ethernet packets
+		MAC_CLK       : in std_logic;                             -- Clock for command FIFO interface
+		RESET         : in std_logic;                             -- Reset for Command Interface
 
+		MAC_RXD       : in std_logic_vector(7 downto 0);  -- Data read from input FIFO
+		MAC_RX_VALID  : in std_logic;                     -- Set when input fifo empty
+		MAC_RX_EOP    : in std_logic;                     -- Marks the end of a receive packet in Ethernet RX FIFO
+		MAC_BAD_FCS   : in std_logic;                     -- Set during EOP/VALID received packet had CRC error
+
+		MAC_TXD       : out std_logic_vector(7 downto 0); -- Data to write to output FIFO
+		MAC_TX_RDY    : in std_logic;                     -- Set when MAC can accept data
+		MAC_TX_VALID  : out std_logic;                    -- Set to write the Ethernet TX FIFO
+		MAC_TX_EOP    : out std_logic;                    -- Marks the end of a transmit packet to the Ethernet TX FIFO
+
+		-- Non-volatile Data
+		NV_DATA       : out std_logic_vector(63 downto 0);  -- NV Data from Multicast Address Words
+		MAC_ADDRESS   : out std_logic_vector(47 downto 0);  -- MAC Address from EPROM
+
+		-- Board Type
+		BOARD_TYPE    : in std_logic_vector(7 downto 0) := x"00";    -- Board type returned in D<31:24> of Host firmware version, default to APS.  0x01 = Trigger
+
+		-- User Logic Connections
+		USER_CLK       : in std_logic;                      -- Clock for User side of FIFO interface
+		USER_RST       : out std_logic;                     -- User Logic global reset, synchronous to USER_CLK
+		USER_VERSION   : in std_logic_vector(31 downto 0);  -- User Logic Firmware Version.  Passed back in status packets
+		USER_STATUS    : in std_logic_vector(31 downto 0);  -- User Status Word.  Passed back in status packets
+
+		USER_DIF       : out std_logic_vector(31 downto 0); -- User Data Input FIFO output
+		USER_DIF_RD    : in std_logic;                      -- User Data Onput FIFO Read Enable
+
+		USER_CIF_EMPTY : out std_logic;                     -- Low when there is data available
+		USER_CIF_RD    : in std_logic;                      -- Command Input FIFO Read Enable
+		USER_CIF_RW    : out std_logic;                     -- High for read, low for write
+		USER_CIF_MODE  : out std_logic_vector(7 downto 0);  -- MODE field from current User I/O command
+		USER_CIF_CNT   : out std_logic_vector(15 downto 0); -- CNT field from current User I/O command
+		USER_CIF_ADDR  : out std_logic_vector(31 downto 0); -- Address for the current command
+
+		USER_DOF       : in std_logic_vector(31 downto 0);  -- User Data Onput FIFO input
+		USER_DOF_WR    : in std_logic;                      -- User Data Onput FIFO Write Enable
+
+		USER_COF_STAT  : in std_logic_vector(7 downto 0);   -- STAT value to return for current User I/O command
+		USER_COF_CNT   : in std_logic_vector(15 downto 0);  -- Number of words written to DOF for current User I/O command
+		USER_COF_AFULL : out std_logic;                     -- User Control Output FIFO Almost Full
+		USER_COF_WR    : in std_logic;                       -- User Control Onput FIFO Write Enable
+
+		-- Config CPLD Data Bus for reading status when STAT_OE is asserted
+		CFG_CLK    : in  STD_LOGIC;  -- 100 MHZ clock from the Config CPLD
+		CFGD       : inout std_logic_vector(15 downto 0);  -- Config Data bus from CPLD
+		FPGA_CMDL  : out  STD_LOGIC;  -- Command strobe from FPGA
+		FPGA_RDYL  : out  STD_LOGIC;  -- Ready Strobe from FPGA
+		CFG_RDY    : in  STD_LOGIC;  -- Ready to complete current transfer
+		CFG_ERR    : in  STD_LOGIC;  -- Error during current command
+		CFG_ACT    : in  STD_LOGIC;  -- Current transaction is complete
+		STAT_OEL   : out std_logic; -- Enable CPLD to drive status onto CFGD
+
+		-- Status to top level
+		GOOD_TOGGLE   : out std_logic;
+		BAD_TOGGLE    : out std_logic
+	);
+	end component;
 
 end AtmIPCores;
 
