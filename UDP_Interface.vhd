@@ -45,44 +45,44 @@ end UDP_Interface;
 
 architecture Behavioral of UDP_Interface is
 
---buffer to recieve outgoing packets so we can get their size
-COMPONENT UDPOutputBufferFIFO
-  PORT (
-    s_aclk : IN std_logic;
-    s_aresetn : IN std_logic;
-    s_axis_tvalid : IN std_logic;
-    s_axis_tready : OUT std_logic;
-    s_axis_tdata : IN std_logic_vector(7 DOWNTO 0);
-    s_axis_tlast : IN std_logic;
-    m_axis_tvalid : OUT std_logic;
-    m_axis_tready : IN std_logic;
-    m_axis_tdata : OUT std_logic_vector(7 DOWNTO 0);
-    m_axis_tlast : OUT std_logic;
-    axis_data_count : OUT std_logic_vector(11 DOWNTO 0)
-  );
-end COMPONENT;
 ATTRIBUTE SYN_BLACK_BOX : BOOLEAN;
-ATTRIBUTE SYN_BLACK_BOX OF UDPOutputBufferFIFO : COMPONENT IS TRUE;
 ATTRIBUTE BLACK_BOX_PAD_PIN : STRING;
-ATTRIBUTE BLACK_BOX_PAD_PIN OF UDPOutputBufferFIFO : COMPONENT IS "s_aclk,s_aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[7:0],s_axis_tlast,m_axis_tvalid,m_axis_tready,m_axis_tdata[7:0],m_axis_tlast,axis_data_count[11:0]";
 
-COMPONENT UDPOutputBufferFIFO2
-  PORT (
-    s_aclk : IN std_logic;
-    s_aresetn : IN std_logic;
-    s_axis_tvalid : IN std_logic;
-    s_axis_tready : OUT std_logic;
-    s_axis_tdata : IN std_logic_vector(7 DOWNTO 0);
-    s_axis_tlast : IN std_logic;
-    m_axis_tvalid : OUT std_logic;
-    m_axis_tready : IN std_logic;
-    m_axis_tdata : OUT std_logic_vector(7 DOWNTO 0);
-    m_axis_tlast : OUT STD_LOGIC
-  );
-end COMPONENT;
-ATTRIBUTE SYN_BLACK_BOX OF UDPOutputBufferFIFO2 : COMPONENT IS TRUE;
-ATTRIBUTE BLACK_BOX_PAD_PIN OF UDPOutputBufferFIFO2 : COMPONENT IS "s_aclk,s_aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[7:0],s_axis_tlast,m_axis_tvalid,m_axis_tready,m_axis_tdata[7:0],m_axis_tlast";
+--buffer to recieve outgoing packets so we can get their size
+    COMPONENT UDPOutputBufferFIFO
+      PORT (
+        s_aclk : IN std_logic;
+        s_aresetn : IN std_logic;
+        s_axis_tvalid : IN std_logic;
+        s_axis_tready : OUT std_logic;
+        s_axis_tdata : IN std_logic_vector(7 DOWNTO 0);
+        s_axis_tlast : IN std_logic;
+        m_axis_tvalid : OUT std_logic;
+        m_axis_tready : IN std_logic;
+        m_axis_tdata : OUT std_logic_vector(7 DOWNTO 0);
+        m_axis_tlast : OUT std_logic;
+        axis_data_count : OUT std_logic_vector(11 DOWNTO 0)
+      );
+    end COMPONENT;
+    ATTRIBUTE SYN_BLACK_BOX OF UDPOutputBufferFIFO : COMPONENT IS TRUE;
+    ATTRIBUTE BLACK_BOX_PAD_PIN OF UDPOutputBufferFIFO : COMPONENT IS "s_aclk,s_aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[7:0],s_axis_tlast,m_axis_tvalid,m_axis_tready,m_axis_tdata[7:0],m_axis_tlast,axis_data_count[11:0]";
 
+    COMPONENT UDPOutputBufferFIFO2
+      PORT (
+        s_aclk : IN std_logic;
+        s_aresetn : IN std_logic;
+        s_axis_tvalid : IN std_logic;
+        s_axis_tready : OUT std_logic;
+        s_axis_tdata : IN std_logic_vector(7 DOWNTO 0);
+        s_axis_tlast : IN std_logic;
+        m_axis_tvalid : OUT std_logic;
+        m_axis_tready : IN std_logic;
+        m_axis_tdata : OUT std_logic_vector(7 DOWNTO 0);
+        m_axis_tlast : OUT STD_LOGIC
+      );
+    end COMPONENT;
+    ATTRIBUTE SYN_BLACK_BOX OF UDPOutputBufferFIFO2 : COMPONENT IS TRUE;
+    ATTRIBUTE BLACK_BOX_PAD_PIN OF UDPOutputBufferFIFO2 : COMPONENT IS "s_aclk,s_aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[7:0],s_axis_tlast,m_axis_tvalid,m_axis_tready,m_axis_tdata[7:0],m_axis_tlast";
 
 --internal routing signals
 signal udp_tx_start : std_logic;

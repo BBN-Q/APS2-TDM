@@ -49,13 +49,13 @@ set_property IOSTANDARD LVCMOS25 [get_ports CFG_CCLK]
 
 # Config Bus Input Timing Constraints
 create_clock -period 10.000 -name CFG_CCLK [get_ports CFG_CCLK]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports {CFGD[*]}]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports {CFGD[*]}]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports {CFGD[*]}]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports CFG_RDY]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_RDY]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_RDY]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports CFG_ACT]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_ACT]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_ACT]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports CFG_ERR]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_ERR]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_ERR]
 
 # Config Bus Output Timing Constraints
@@ -399,10 +399,6 @@ set_false_path -from [get_clocks -include_generated_clocks CMD_CLK] -to [get_clo
 set_false_path -from [get_clocks -include_generated_clocks CFG_CCLK] -to [get_clocks -include_generated_clocks CMD_CLK]
 set_false_path -from [get_clocks -include_generated_clocks CFG_CCLK] -to [get_clocks -include_generated_clocks gtrefclk]
 set_false_path -from [get_clocks -include_generated_clocks gtrefclk] -to [get_clocks -include_generated_clocks CFG_CCLK]
-
-# Ignore reset synchronization related paths
-set_false_path -to [get_pins -hier -filter {name =~ *reset_sync1/PRE }]
-set_false_path -to [get_pins -hier -filter {name =~ *reset_sync2/PRE }]
 
 # Make sure there are no contstraints on the output
 set_false_path -from [get_clocks -include_generated_clocks CLK_400MHZ] -to [get_ports {TRGDAT_OUTP[*]}]
