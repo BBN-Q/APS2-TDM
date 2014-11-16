@@ -30,6 +30,8 @@ use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
+use work.AtmIPCores.all;
+
 entity TriggerInLogic is
 port
 (
@@ -54,65 +56,6 @@ end TriggerInLogic;
 
 
 architecture behavior of TriggerInLogic is
-
-component TRIG_MMCM
-port
-(
-  -- Clock in ports
-  CLK_100MHZ_IN           : in     std_logic;
-
-  -- Clock out ports
-  TRIG_100MHZ          : out    std_logic;
-  TRIG_400MHZ          : out    std_logic;
-
-  -- Status and control signals
-  RESET             : in     std_logic;
-  LOCKED            : out    std_logic
-);
-end component;
-
-
-COMPONENT TRIG_FIFO
-PORT
-(
-  rst : IN STD_LOGIC;
-  wr_clk : IN STD_LOGIC;
-  rd_clk : IN STD_LOGIC;
-  din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-  wr_en : IN STD_LOGIC;
-  rd_en : IN STD_LOGIC;
-  dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-  full : OUT STD_LOGIC;
-  empty : OUT STD_LOGIC;
-  prog_full : OUT STD_LOGIC  
-);
-END COMPONENT;
-
-COMPONENT TIO_FIFO
-  PORT (
-    rst : IN STD_LOGIC;
-    wr_clk : IN STD_LOGIC;
-    rd_clk : IN STD_LOGIC;
-    din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-    wr_en : IN STD_LOGIC;
-    rd_en : IN STD_LOGIC;
-    dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-    full : OUT STD_LOGIC;
-    empty : OUT STD_LOGIC;
-    prog_full : OUT STD_LOGIC
-  );
-END COMPONENT;
-
-ATTRIBUTE SYN_BLACK_BOX : BOOLEAN;
-ATTRIBUTE SYN_BLACK_BOX OF TRIG_MMCM : COMPONENT IS TRUE;
-ATTRIBUTE SYN_BLACK_BOX OF TRIG_FIFO : COMPONENT IS TRUE;
-ATTRIBUTE SYN_BLACK_BOX OF TIO_FIFO : COMPONENT IS TRUE;
-
-ATTRIBUTE BLACK_BOX_PAD_PIN : STRING;
-ATTRIBUTE BLACK_BOX_PAD_PIN OF TRIG_MMCM : COMPONENT IS "CLK_100MHZ_IN,TRIG_100MHZ,TRIG_400MHZ,RESET,LOCKED";
-ATTRIBUTE BLACK_BOX_PAD_PIN OF TRIG_FIFO : COMPONENT IS "rst,wr_clk,rd_clk,din[7:0],wr_en,rd_en,dout[7:0],full,empty,prog_full";
-ATTRIBUTE BLACK_BOX_PAD_PIN OF TIO_FIFO : COMPONENT IS "rst,wr_clk,rd_clk,din[7:0],wr_en,rd_en,dout[7:0],full,empty,prog_full";
-
 
 type TRIG_STATE is (TRIG_START, TRIG_CHK_STABLE, TRIG_NEXT_DLY, TRIG_CHK_DLY, TRIG_RESTART, TRIG_SET_DLY, TRIG_ALIGN, TRIG_DONE);
 signal TrigState : TRIG_STATE;
@@ -668,6 +611,3 @@ begin
   TRIG_READY <= not TrigEmpty;
 
 end behavior;
-
-
-
