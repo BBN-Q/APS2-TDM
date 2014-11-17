@@ -100,6 +100,8 @@ signal CLK_125MHZ    : std_logic;
 signal CLK_200MHZ    : std_logic;
 signal CLK_400MHZ    : std_logic;
 
+signal AXI_resetn    : std_logic;
+
 signal ExtTrig : std_logic_vector(7 downto 0);
 signal GlobalReset   : std_logic;
 signal STATUS : std_logic_vector(4 downto 0);
@@ -172,6 +174,62 @@ signal CurTemp : std_logic_vector(15 downto 0);
 signal DrpEn : std_logic;
 signal DrpRdy : std_logic;
 signal DrpBusy : std_logic;
+
+--CSR AXI Lite
+signal CSR_araddr :  std_logic_vector ( 31 downto 0 );
+signal CSR_arprot :  std_logic_vector ( 2 downto 0 );
+signal CSR_arready : std_logic;
+signal CSR_arvalid : std_logic;
+signal CSR_awaddr :  std_logic_vector ( 31 downto 0 );
+signal CSR_awprot :  std_logic_vector ( 2 downto 0 );
+signal CSR_awready : std_logic;
+signal CSR_awvalid : std_logic;
+signal CSR_bready :  std_logic;
+signal CSR_bresp : std_logic_vector ( 1 downto 0 );
+signal CSR_bvalid : std_logic;
+signal CSR_rdata : std_logic_vector ( 31 downto 0 );
+signal CSR_rready :  std_logic;
+signal CSR_rresp : std_logic_vector ( 1 downto 0 );
+signal CSR_rvalid : std_logic;
+signal CSR_wdata :  std_logic_vector ( 31 downto 0 );
+signal CSR_wready : std_logic;
+signal CSR_wstrb :  std_logic_vector ( 3 downto 0 );
+signal CSR_wvalid :  std_logic;
+
+--CSR registers
+signal resets : std_logic_vector(31 downto 0);
+
+
+--Ethernet DataMover command/status and streams
+signal ethernet_mm2s_tdata : std_logic_vector ( 31 downto 0 ) := (others => '0');
+signal ethernet_mm2s_tkeep : std_logic_vector ( 3 downto 0 ) := (others => '0');
+signal ethernet_mm2s_tlast : std_logic := '0';
+signal ethernet_mm2s_tready : std_logic := '0';
+signal ethernet_mm2s_tvalid : std_logic := '0';
+signal ethernet_s2mm_tdata : std_logic_vector ( 31 downto 0 ) := (others => '0');
+signal ethernet_s2mm_tkeep : std_logic_vector ( 3 downto 0 ) := (others => '1'); -- assuming 32bit words
+signal ethernet_s2mm_tlast : std_logic := '0';
+signal ethernet_s2mm_tvalid : std_logic := '0';
+signal ethernet_s2mm_tready : std_logic := '0';
+
+signal ethernet_s2mm_sts_tdata : std_logic_vector ( 7 downto 0 ) := (others => '0');
+signal ethernet_s2mm_sts_tkeep : std_logic_vector ( 0 to 0 );
+signal ethernet_s2mm_sts_tlast : std_logic := '0';
+signal ethernet_s2mm_sts_tready : std_logic := '0';
+signal ethernet_s2mm_sts_tvalid : std_logic := '0';
+signal ethernet_mm2s_sts_tdata : std_logic_vector ( 7 downto 0 ) := (others => '0');
+signal ethernet_mm2s_sts_tkeep : std_logic_vector ( 0 to 0 );
+signal ethernet_mm2s_sts_tlast : std_logic := '0';
+signal ethernet_mm2s_sts_tready : std_logic := '0';
+signal ethernet_mm2s_sts_tvalid : std_logic := '0';
+signal ethernet_s2mm_cmd_tdata : std_logic_vector ( 71 downto 0 ) := (others => '0');
+signal ethernet_s2mm_cmd_tready : std_logic := '0';
+signal ethernet_s2mm_cmd_tvalid : std_logic := '0';
+signal ethernet_mm2s_cmd_tdata : std_logic_vector ( 71 downto 0 ) := (others => '0');
+signal ethernet_mm2s_cmd_tready : std_logic := '0';
+signal ethernet_mm2s_cmd_tvalid : std_logic := '0';
+signal ethernet_s2mm_err : std_logic := '0';
+signal ethernet_mm2s_err : std_logic := '0';
 
 begin
 	-- Avoid Xilinx errors for unused pins in the XDC file
@@ -420,38 +478,162 @@ begin
 		STATUS       => STATUS
 	);
 
-	-- All of the APS User Logic is contained within this component
-	AUL1 : entity work.ApsDacUserLogic
-	port map
-	(
-		USER_CLK       => CLK_100MHZ,
-		USER_RST       => USER_RST,
-		USER_VERSION   => open,
-		USER_STATUS    => open,
+	myMemory : entity work.Memory
+	port map (
 
-		USER_DIF       => USER_DIF,
-		USER_DIF_RD    => USER_DIF_RD,
+	    reset => GlobalReset,
+	    clk_axi => CLK_100MHZ,
+	    clk_axi_locked => CfgLocked,
+	    AXI_resetn(0) => AXI_resetn,
 
-		USER_CIF_EMPTY => USER_CIF_EMPTY,
-		USER_CIF_RD    => USER_CIF_RD,
-		USER_CIF_RW    => USER_CIF_RW,
-		USER_CIF_MODE  => USER_CIF_MODE,
-		USER_CIF_CNT   => USER_CIF_CNT,
-		USER_CIF_ADDR  => USER_CIF_ADDR,
+		------------------------------------------------------------------
+		-- CSR AXI
+		CSR_araddr => CSR_araddr, 
+		CSR_arprot => CSR_arprot, 
+		CSR_arready => CSR_arready, 
+		CSR_arvalid => CSR_arvalid, 
+		CSR_awaddr => CSR_awaddr, 
+		CSR_awprot => CSR_awprot, 
+		CSR_awready => CSR_awready, 
+		CSR_awvalid => CSR_awvalid, 
+		CSR_bready => CSR_bready, 
+		CSR_bresp => CSR_bresp, 
+		CSR_bvalid => CSR_bvalid, 
+		CSR_rdata => CSR_rdata, 
+		CSR_rready => CSR_rready, 
+		CSR_rresp => CSR_rresp, 
+		CSR_rvalid => CSR_rvalid, 
+		CSR_wdata => CSR_wdata, 
+		CSR_wready => CSR_wready, 
+		CSR_wstrb => CSR_wstrb, 
+		CSR_wvalid => CSR_wvalid, 
 
-		USER_DOF       => USER_DOF,
-		USER_DOF_WR    => USER_DOF_WR,
 
-		USER_COF_STAT  => USER_COF_STAT,
-		USER_COF_CNT   => USER_COF_CNT,
-		USER_COF_AFULL => USER_COF_AFULL,
-		USER_COF_WR    => USER_COF_WR,
-
-		DAC0_WF_MODE   => open ,
-		DAC0_AMPLITUDE => TrigOutEn ,
-		DAC1_WF_MODE   => open ,
-		DAC1_AMPLITUDE => open
+		------------------------------------------------------------------
+		--Ethernet DMA
+		ethernet_mm2s_tdata  => ethernet_mm2s_tdata,
+		ethernet_mm2s_tkeep  => ethernet_mm2s_tkeep,
+		ethernet_mm2s_tlast  => ethernet_mm2s_tlast,
+		ethernet_mm2s_tready => ethernet_mm2s_tready,
+		ethernet_mm2s_tvalid => ethernet_mm2s_tvalid,
+		ethernet_s2mm_tdata  => ethernet_s2mm_tdata,
+		ethernet_s2mm_tkeep  => ethernet_s2mm_tkeep,
+		ethernet_s2mm_tlast  => ethernet_s2mm_tlast,
+		ethernet_s2mm_tvalid  => ethernet_s2mm_tvalid,
+		ethernet_s2mm_tready => ethernet_s2mm_tready,
+		ethernet_mm2s_sts_tdata => ethernet_mm2s_sts_tdata,
+		ethernet_mm2s_sts_tkeep => ethernet_mm2s_sts_tkeep,
+		ethernet_mm2s_sts_tlast => ethernet_mm2s_sts_tlast,
+		ethernet_mm2s_sts_tready => ethernet_mm2s_sts_tready,
+		ethernet_mm2s_sts_tvalid => ethernet_mm2s_sts_tvalid,
+		ethernet_s2mm_sts_tdata => ethernet_s2mm_sts_tdata,
+		ethernet_s2mm_sts_tkeep => ethernet_s2mm_sts_tkeep,
+		ethernet_s2mm_sts_tlast => ethernet_s2mm_sts_tlast,
+		ethernet_s2mm_sts_tready => ethernet_s2mm_sts_tready,
+		ethernet_s2mm_sts_tvalid => ethernet_s2mm_sts_tvalid,
+		ethernet_mm2s_cmd_tdata => ethernet_mm2s_cmd_tdata,
+		ethernet_mm2s_cmd_tready => ethernet_mm2s_cmd_tready,
+		ethernet_mm2s_cmd_tvalid => ethernet_mm2s_cmd_tvalid,
+		ethernet_s2mm_cmd_tdata => ethernet_s2mm_cmd_tdata,
+		ethernet_s2mm_cmd_tready => ethernet_s2mm_cmd_tready,
+		ethernet_s2mm_cmd_tvalid => ethernet_s2mm_cmd_tvalid,
+		ethernet_s2mm_err => ethernet_s2mm_err,
+		ethernet_mm2s_err => ethernet_mm2s_err
 	);
+
+	-- Instantiate the APSMsgProc - AXI bridge
+	AXIbridge_inst : entity work.AXIBridge
+	port map (
+		RST => GlobalReset,
+
+		-- User Logic Connections
+		USER_CLK  => CLK_100MHZ,                        -- Clock for User side of FIFO interface
+		USER_RST => GlobalReset,
+
+		USER_DIF => USER_DIF,  -- User Data Input FIFO output
+		USER_DIF_RD => USER_DIF_RD,  -- User Data Onput FIFO Read Enable
+
+		USER_CIF_EMPTY => USER_CIF_EMPTY,                    -- Low when there is data available
+		USER_CIF_RD  => USER_CIF_RD,   -- Command Input FIFO Read Enable
+		USER_CIF_RW    => USER_CIF_RW,                       -- High for read, low for write
+		USER_CIF_MODE  => USER_CIF_MODE,   -- MODE field from current User I/O command
+		USER_CIF_CNT   => USER_CIF_CNT,   -- CNT field from current User I/O command
+		USER_CIF_ADDR  => USER_CIF_ADDR,   -- Address for the current command
+
+		USER_DOF       => USER_DOF,  -- User Data Onput FIFO input
+		USER_DOF_WR    => USER_DOF_WR,    -- User Data Onput FIFO Write Enable
+
+		USER_COF_STAT  => USER_COF_STAT,  -- STAT value to return for current User I/O command
+		USER_COF_CNT   => USER_COF_CNT,   -- Number of words written to DOF for current User I/O command
+		USER_COF_AFULL => USER_COF_AFULL,  -- User Control Output FIFO Almost Full
+		USER_COF_WR    => USER_COF_WR,     -- User Control Onput FIFO Write Enable
+
+		MM2S_STS_tdata => ethernet_mm2s_sts_tdata,
+		MM2S_STS_tkeep => ethernet_mm2s_sts_tkeep,
+		MM2S_STS_tlast => ethernet_mm2s_sts_tlast,
+		MM2S_STS_tready => ethernet_mm2s_sts_tready,
+		MM2S_STS_tvalid => ethernet_mm2s_sts_tvalid,
+
+		MM2S_tdata => ethernet_mm2s_tdata,
+		MM2S_tkeep => ethernet_mm2s_tkeep,
+		MM2S_tlast => ethernet_mm2s_tlast,
+		MM2S_tready => ethernet_mm2s_tready,
+		MM2S_tvalid => ethernet_mm2s_tvalid,
+
+		S2MM_STS_tdata => ethernet_s2mm_sts_tdata,
+		S2MM_STS_tkeep => ethernet_s2mm_sts_tkeep,
+		S2MM_STS_tlast => ethernet_s2mm_sts_tlast,
+		S2MM_STS_tready => ethernet_s2mm_sts_tready,
+		S2MM_STS_tvalid => ethernet_s2mm_sts_tvalid,
+
+		MM2S_CMD_tdata => ethernet_mm2s_cmd_tdata,
+		MM2S_CMD_tready => ethernet_mm2s_cmd_tready,
+		MM2S_CMD_tvalid => ethernet_mm2s_cmd_tvalid,
+
+		S2MM_CMD_tdata => ethernet_s2mm_cmd_tdata,
+		S2MM_CMD_tready => ethernet_s2mm_cmd_tready,
+		S2MM_CMD_tvalid => ethernet_s2mm_cmd_tvalid,
+
+		S2MM_tdata => ethernet_s2mm_tdata,
+		S2MM_tkeep => ethernet_s2mm_tkeep,
+		S2MM_tlast => ethernet_s2mm_tlast,
+		S2MM_tready => ethernet_s2mm_tready,
+		S2MM_tvalid => ethernet_s2mm_tvalid
+	);
+
+	-- CSR
+	CSR : entity work.APS2_CSR
+	port map (
+
+		sys_clk => CLK_100MHZ,
+
+		resets => resets,
+		controls => open,
+		dummyStatus => x"12345678",
+		dummyStatus2 => x"87654321",
+
+		S_AXI_ACLK => CLK_100MHZ,
+		S_AXI_ARESETN => AXI_resetn,
+		S_AXI_AWADDR => CSR_awaddr(7 downto 0),
+		S_AXI_AWPROT => CSR_awprot,
+		S_AXI_AWVALID => CSR_awvalid,
+		S_AXI_AWREADY => CSR_awready,
+		S_AXI_WDATA => CSR_wdata,
+		S_AXI_WSTRB => CSR_wstrb,
+		S_AXI_WVALID => CSR_wvalid,
+		S_AXI_WREADY => CSR_wready,
+		S_AXI_BRESP => CSR_bresp,
+		S_AXI_BVALID => CSR_bvalid,
+		S_AXI_BREADY => CSR_bready,
+		S_AXI_ARADDR => CSR_araddr(7 downto 0),
+		S_AXI_ARPROT => CSR_arprot,
+		S_AXI_ARVALID => CSR_arvalid,
+		S_AXI_ARREADY => CSR_arready,
+		S_AXI_RDATA => CSR_rdata,
+		S_AXI_RRESP => CSR_rresp,
+		S_AXI_RVALID  => CSR_rvalid,
+		S_AXI_RREADY  => CSR_rready
+  );
 
 		
 	CBF1 : for i in 0 to 7 generate

@@ -131,20 +131,27 @@ proc create_root_design { parentCell } {
 
   # Create interface ports
   set CSR [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 CSR ]
-  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.DATA_WIDTH {32} CONFIG.PROTOCOL {AXI4}  ] $CSR
-  set etherenet_mm2s [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 etherenet_mm2s ]
+  set_property -dict [ list CONFIG.ADDR_WIDTH {32} CONFIG.DATA_WIDTH {32} CONFIG.FREQ_HZ {100000000} CONFIG.PROTOCOL {AXI4LITE}  ] $CSR
+  set ethernet_mm2s [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_mm2s ]
+  set_property -dict [ list CONFIG.FREQ_HZ {100000000}  ] $ethernet_mm2s
   set ethernet_mm2s_cmd [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_mm2s_cmd ]
   set_property -dict [ list CONFIG.CLK_DOMAIN {} CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {0} CONFIG.HAS_TLAST {0} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {9} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_mm2s_cmd
   set ethernet_mm2s_sts [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_mm2s_sts ]
+  set_property -dict [ list CONFIG.FREQ_HZ {100000000}  ] $ethernet_mm2s_sts
   set ethernet_s2mm [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_s2mm ]
   set_property -dict [ list CONFIG.CLK_DOMAIN {} CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {1} CONFIG.HAS_TLAST {1} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {4} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_s2mm
   set ethernet_s2mm_cmd [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_s2mm_cmd ]
   set_property -dict [ list CONFIG.CLK_DOMAIN {} CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {0} CONFIG.HAS_TLAST {0} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {9} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_s2mm_cmd
   set ethernet_s2mm_sts [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_s2mm_sts ]
+  set_property -dict [ list CONFIG.FREQ_HZ {100000000}  ] $ethernet_s2mm_sts
 
   # Create ports
+  set AXI_resetn [ create_bd_port -dir O -from 0 -to 0 -type rst AXI_resetn ]
   set clk_axi [ create_bd_port -dir I -type clk clk_axi ]
-  set_property -dict [ list CONFIG.ASSOCIATED_BUSIF {CSR} CONFIG.FREQ_HZ {100000000}  ] $clk_axi
+  set_property -dict [ list CONFIG.ASSOCIATED_BUSIF {CSR:ethernet_mm2s:ethernet_mm2s_cmd:ethernet_mm2s_sts:ethernet_s2mm:ethernet_s2mm_cmd:ethernet_s2mm_sts} CONFIG.FREQ_HZ {100000000}  ] $clk_axi
+  set clk_axi_locked [ create_bd_port -dir I clk_axi_locked ]
+  set ethernet_mm2s_err [ create_bd_port -dir O ethernet_mm2s_err ]
+  set ethernet_s2mm_err [ create_bd_port -dir O ethernet_s2mm_err ]
   set reset [ create_bd_port -dir I -type rst reset ]
 
   # Create instance: DataMover_Ethernet, and set properties
@@ -152,27 +159,39 @@ proc create_root_design { parentCell } {
 
   # Create instance: axi_interconnect_0, and set properties
   set axi_interconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interconnect_0 ]
+  set_property -dict [ list CONFIG.NUM_MI {1} CONFIG.NUM_SI {2} CONFIG.STRATEGY {2}  ] $axi_interconnect_0
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
+  set_property -dict [ list CONFIG.C_AUX_RESET_HIGH {1}  ] $proc_sys_reset_0
+
+  # Create instance: xlconstant_0, and set properties
+  set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net DataMover_Ethernet_M_AXIS_MM2S [get_bd_intf_ports etherenet_mm2s] [get_bd_intf_pins DataMover_Ethernet/M_AXIS_MM2S]
+  connect_bd_intf_net -intf_net DataMover_Ethernet_M_AXIS_MM2S [get_bd_intf_ports ethernet_mm2s] [get_bd_intf_pins DataMover_Ethernet/M_AXIS_MM2S]
   connect_bd_intf_net -intf_net DataMover_Ethernet_M_AXIS_MM2S_STS [get_bd_intf_ports ethernet_mm2s_sts] [get_bd_intf_pins DataMover_Ethernet/M_AXIS_MM2S_STS]
   connect_bd_intf_net -intf_net DataMover_Ethernet_M_AXIS_S2MM_STS [get_bd_intf_ports ethernet_s2mm_sts] [get_bd_intf_pins DataMover_Ethernet/M_AXIS_S2MM_STS]
   connect_bd_intf_net -intf_net DataMover_Ethernet_M_AXI_MM2S [get_bd_intf_pins DataMover_Ethernet/M_AXI_MM2S] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
   connect_bd_intf_net -intf_net ETHERNET_MM2S_CMD_1 [get_bd_intf_ports ethernet_mm2s_cmd] [get_bd_intf_pins DataMover_Ethernet/S_AXIS_MM2S_CMD]
   connect_bd_intf_net -intf_net ETHERNET_S2MM_1 [get_bd_intf_ports ethernet_s2mm] [get_bd_intf_pins DataMover_Ethernet/S_AXIS_S2MM]
   connect_bd_intf_net -intf_net ETHERNET_S2MM_CMD_1 [get_bd_intf_ports ethernet_s2mm_cmd] [get_bd_intf_pins DataMover_Ethernet/S_AXIS_S2MM_CMD]
+  connect_bd_intf_net -intf_net S01_AXI_1 [get_bd_intf_pins DataMover_Ethernet/M_AXI_S2MM] [get_bd_intf_pins axi_interconnect_0/S01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_ports CSR] [get_bd_intf_pins axi_interconnect_0/M00_AXI]
 
   # Create port connections
-  connect_bd_net -net CLK_AXI_1 [get_bd_ports clk_axi] [get_bd_pins DataMover_Ethernet/m_axi_mm2s_aclk] [get_bd_pins DataMover_Ethernet/m_axi_s2mm_aclk] [get_bd_pins DataMover_Ethernet/m_axis_mm2s_cmdsts_aclk] [get_bd_pins DataMover_Ethernet/m_axis_s2mm_cmdsts_awclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
+  connect_bd_net -net CLK_AXI_1 [get_bd_ports clk_axi] [get_bd_pins DataMover_Ethernet/m_axi_mm2s_aclk] [get_bd_pins DataMover_Ethernet/m_axi_s2mm_aclk] [get_bd_pins DataMover_Ethernet/m_axis_mm2s_cmdsts_aclk] [get_bd_pins DataMover_Ethernet/m_axis_s2mm_cmdsts_awclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
+  connect_bd_net -net DataMover_Ethernet_mm2s_err [get_bd_ports ethernet_mm2s_err] [get_bd_pins DataMover_Ethernet/mm2s_err]
+  connect_bd_net -net DataMover_Ethernet_s2mm_err [get_bd_ports ethernet_s2mm_err] [get_bd_pins DataMover_Ethernet/s2mm_err]
   connect_bd_net -net RESET_1 [get_bd_ports reset] [get_bd_pins proc_sys_reset_0/ext_reset_in]
+  connect_bd_net -net clk_axi_locked_1 [get_bd_ports clk_axi_locked] [get_bd_pins proc_sys_reset_0/dcm_locked]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins DataMover_Ethernet/m_axi_mm2s_aresetn] [get_bd_pins DataMover_Ethernet/m_axi_s2mm_aresetn] [get_bd_pins DataMover_Ethernet/m_axis_mm2s_cmdsts_aresetn] [get_bd_pins DataMover_Ethernet/m_axis_s2mm_cmdsts_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_ports AXI_resetn] [get_bd_pins DataMover_Ethernet/m_axi_mm2s_aresetn] [get_bd_pins DataMover_Ethernet/m_axi_s2mm_aresetn] [get_bd_pins DataMover_Ethernet/m_axis_mm2s_cmdsts_aresetn] [get_bd_pins DataMover_Ethernet/m_axis_s2mm_cmdsts_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins proc_sys_reset_0/aux_reset_in] [get_bd_pins proc_sys_reset_0/mb_debug_sys_rst] [get_bd_pins xlconstant_0/dout]
 
   # Create address segments
+  create_bd_addr_seg -range 0x1000 -offset 0x44A00000 [get_bd_addr_spaces DataMover_Ethernet/Data_MM2S] [get_bd_addr_segs CSR/Reg] SEG_Memory_Reg
+  create_bd_addr_seg -range 0x1000 -offset 0x44A00000 [get_bd_addr_spaces DataMover_Ethernet/Data_S2MM] [get_bd_addr_segs CSR/Reg] SEG_Memory_Reg
   
 
   # Restore current instance

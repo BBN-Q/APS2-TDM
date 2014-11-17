@@ -369,8 +369,8 @@ set_property PACKAGE_PIN E11 [get_ports gtrefclk_n]
 #-----------------------------------------------------------
 create_clock -period 8.000 -name gtrefclk -add [get_ports gtrefclk_p]
 
-# 2X UserClk for 125 MHz portion of GTP I/O
-create_clock -period 8.000 -name CMD_CLK -waveform {0.000 4.000} [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]
+# 2X UserClk for 125 MHz portion of GTP I/O 
+#create_clock -period 8.000 -name CMD_CLK -waveform {0.000 4.000} [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]
 
 # Received 100 MHz trigger clock from MMCM output
 create_clock -period 10.000 -name TRIG_100MHZ_IN -waveform {0.000 5.000} [get_pins TIL1/CK1/CLK_100MHZ_IN]
@@ -389,14 +389,14 @@ set_false_path -from [get_clocks -include_generated_clocks CLK_100MHZ] -to [get_
 set_false_path -from [get_clocks -include_generated_clocks gtrefclk] -to [get_clocks -include_generated_clocks CLK_100MHZ]
 
 # No implied phase relationship between command clock and config clock
-set_false_path -from [get_clocks -include_generated_clocks CMD_CLK] -to [get_clocks -include_generated_clocks CLK_100MHZ]
-set_false_path -from [get_clocks -include_generated_clocks CLK_100MHZ] -to [get_clocks -include_generated_clocks CMD_CLK]
-set_false_path -from [get_clocks -include_generated_clocks CMD_CLK] -to [get_clocks -include_generated_clocks TRIG_100MHZ]
-set_false_path -from [get_clocks -include_generated_clocks TRIG_100MHZ] -to [get_clocks -include_generated_clocks CMD_CLK]
-set_false_path -from [get_clocks -include_generated_clocks CMD_CLK] -to [get_clocks -include_generated_clocks TRIG_400MHZ]
-set_false_path -from [get_clocks -include_generated_clocks TRIG_400MHZ] -to [get_clocks -include_generated_clocks CMD_CLK]
-set_false_path -from [get_clocks -include_generated_clocks CMD_CLK] -to [get_clocks -include_generated_clocks CFG_CCLK]
-set_false_path -from [get_clocks -include_generated_clocks CFG_CCLK] -to [get_clocks -include_generated_clocks CMD_CLK]
+set_false_path -from [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]] -to [get_clocks -include_generated_clocks CLK_100MHZ]
+set_false_path -from [get_clocks -include_generated_clocks CLK_100MHZ] -to [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]]
+set_false_path -from [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]] -to [get_clocks -include_generated_clocks TRIG_100MHZ]
+set_false_path -from [get_clocks -include_generated_clocks TRIG_100MHZ] -to [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]]
+set_false_path -from [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]] -to [get_clocks -include_generated_clocks TRIG_400MHZ]
+set_false_path -from [get_clocks -include_generated_clocks TRIG_400MHZ] -to [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]]
+set_false_path -from [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]] -to [get_clocks -include_generated_clocks CFG_CCLK]
+set_false_path -from [get_clocks -include_generated_clocks CFG_CCLK] -to [get_clocks -of_objects [get_pins AC1/core_wrapper/U0/core_clocking_i/userclk2]]
 set_false_path -from [get_clocks -include_generated_clocks CFG_CCLK] -to [get_clocks -include_generated_clocks gtrefclk]
 set_false_path -from [get_clocks -include_generated_clocks gtrefclk] -to [get_clocks -include_generated_clocks CFG_CCLK]
 
@@ -411,14 +411,14 @@ set_false_path -from [get_cells AC1/AMP1/ACP1/CFG1/ExtOE] -to [get_ports {CFGD[*
 set_false_path -to [get_ports STAT_OEL]
 
 # Place input logic in the X1Y2 clock region
-create_pblock pblock_TIL1
-add_cells_to_pblock [get_pblocks pblock_TIL1] [get_cells -quiet [list TIL1]]
-resize_pblock [get_pblocks pblock_TIL1] -add {CLOCKREGION_X0Y0:CLOCKREGION_X0Y0}
+#create_pblock pblock_TIL1
+#add_cells_to_pblock [get_pblocks pblock_TIL1] [get_cells -quiet [list TIL1]]
+#resize_pblock [get_pblocks pblock_TIL1] -add {CLOCKREGION_X0Y0:CLOCKREGION_X0Y0}
 
 # Place ethernet logic in the upper left quadrant of the chip
-create_pblock pblock_AC1
-add_cells_to_pblock [get_pblocks pblock_AC1] [get_cells -quiet [list AC1]]
-resize_pblock [get_pblocks pblock_AC1] -add {CLOCKREGION_X0Y2:CLOCKREGION_X0Y4}
+#create_pblock pblock_AC1
+#add_cells_to_pblock [get_pblocks pblock_AC1] [get_cells -quiet [list AC1]]
+#resize_pblock [get_pblocks pblock_AC1] -add {CLOCKREGION_X0Y2:CLOCKREGION_X0Y4}
 
 # Must LOC IDELAYCTRL for Trigger input to avoid mapping errors
 # Place after PBLOCK since it perhaps matters?

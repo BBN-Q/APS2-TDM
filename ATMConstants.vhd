@@ -33,9 +33,8 @@ package ATMConstants is
     --CSR register read / write directions
     type CSR_ARRAY_t is array(natural range <>) of natural;
 
-    constant CSR_READ_REGS : CSR_ARRAY_t(0 to 7) := (0, 1, 2, 3, 13, 14, 15, 16);
-    constant CSR_WRITE_REGS : CSR_ARRAY_t(0 to 8) := (4, 5, 6, 7, 8, 9, 10, 11, 12);
-
+    constant CSR_READ_REGS : CSR_ARRAY_t(0 to 1) := (1, 3);
+    constant CSR_WRITE_REGS : CSR_ARRAY_t(0 to 1) := (0, 2);
 
 end ATMConstants;
 
