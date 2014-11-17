@@ -105,85 +105,85 @@ package AtmIPCores is
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF SEROUT8 : COMPONENT IS "data_out_to_pins_p[0:0],data_out_to_pins_n[0:0],clk_in,clk_div_in,data_out_from_device[7:0],io_reset";
 	
 	COMPONENT SFP_GIGE
-	  PORT (
-	    gtrefclk_p : IN STD_LOGIC;
-	    gtrefclk_n : IN STD_LOGIC;
-	    gtrefclk_out : OUT STD_LOGIC;
-	    txn : OUT STD_LOGIC;
-	    txp : OUT STD_LOGIC;
-	    rxn : IN STD_LOGIC;
-	    rxp : IN STD_LOGIC;
-	    independent_clock_bufg : IN STD_LOGIC;
-	    userclk_out : OUT STD_LOGIC;
-	    userclk2_out : OUT STD_LOGIC;
-	    rxuserclk_out : OUT STD_LOGIC;
-	    rxuserclk2_out : OUT STD_LOGIC;
-	    resetdone : OUT STD_LOGIC;
-	    pma_reset_out : OUT STD_LOGIC;
-	    mmcm_locked_out : OUT STD_LOGIC;
-	    gmii_txd : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    gmii_tx_en : IN STD_LOGIC;
-	    gmii_tx_er : IN STD_LOGIC;
-	    gmii_rxd : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    gmii_rx_dv : OUT STD_LOGIC;
-	    gmii_rx_er : OUT STD_LOGIC;
-	    gmii_isolate : OUT STD_LOGIC;
-	    configuration_vector : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
-	    an_interrupt : OUT STD_LOGIC;
-	    an_adv_config_vector : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-	    an_restart_config : IN STD_LOGIC;
-	    status_vector : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-	    reset : IN STD_LOGIC;
-	    signal_detect : IN STD_LOGIC;
-	    gt0_pll0outclk_out : OUT STD_LOGIC;
-	    gt0_pll0outrefclk_out : OUT STD_LOGIC;
-	    gt0_pll1outclk_out : OUT STD_LOGIC;
-	    gt0_pll1outrefclk_out : OUT STD_LOGIC;
-	    gt0_pll0lock_out : OUT STD_LOGIC;
-	    gt0_pll0refclklost_out : OUT STD_LOGIC
-	  );
+    PORT (
+		gtrefclk_p : IN STD_LOGIC;
+		gtrefclk_n : IN STD_LOGIC;
+		gtrefclk_out : OUT STD_LOGIC;
+		txn : OUT STD_LOGIC;
+		txp : OUT STD_LOGIC;
+		rxn : IN STD_LOGIC;
+		rxp : IN STD_LOGIC;
+		independent_clock_bufg : IN STD_LOGIC;
+		userclk_out : OUT STD_LOGIC;
+		userclk2_out : OUT STD_LOGIC;
+		rxuserclk_out : OUT STD_LOGIC;
+		rxuserclk2_out : OUT STD_LOGIC;
+		resetdone : OUT STD_LOGIC;
+		pma_reset_out : OUT STD_LOGIC;
+		mmcm_locked_out : OUT STD_LOGIC;
+		gmii_txd : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		gmii_tx_en : IN STD_LOGIC;
+		gmii_tx_er : IN STD_LOGIC;
+		gmii_rxd : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+		gmii_rx_dv : OUT STD_LOGIC;
+		gmii_rx_er : OUT STD_LOGIC;
+		gmii_isolate : OUT STD_LOGIC;
+		configuration_vector : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+		an_interrupt : OUT STD_LOGIC;
+		an_adv_config_vector : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		an_restart_config : IN STD_LOGIC;
+		status_vector : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+		reset : IN STD_LOGIC;
+		signal_detect : IN STD_LOGIC;
+		gt0_pll0outclk_out : OUT STD_LOGIC;
+		gt0_pll0outrefclk_out : OUT STD_LOGIC;
+		gt0_pll1outclk_out : OUT STD_LOGIC;
+		gt0_pll1outrefclk_out : OUT STD_LOGIC;
+		gt0_pll0lock_out : OUT STD_LOGIC;
+		gt0_pll0refclklost_out : OUT STD_LOGIC
+    );
 	END COMPONENT;
 	ATTRIBUTE SYN_BLACK_BOX OF SFP_GIGE : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF SFP_GIGE : COMPONENT IS "gtrefclk_p,gtrefclk_n,gtrefclk_out,txn,txp,rxn,rxp,independent_clock_bufg,userclk_out,userclk2_out,rxuserclk_out,rxuserclk2_out,resetdone,pma_reset_out,mmcm_locked_out,gmii_txd[7:0],gmii_tx_en,gmii_tx_er,gmii_rxd[7:0],gmii_rx_dv,gmii_rx_er,gmii_isolate,configuration_vector[4:0],an_interrupt,an_adv_config_vector[15:0],an_restart_config,status_vector[15:0],reset,signal_detect,gt0_pll0outclk_out,gt0_pll0outrefclk_out,gt0_pll1outclk_out,gt0_pll1outrefclk_out,gt0_pll0lock_out,gt0_pll0refclklost_out";
 
 
 	COMPONENT GIGE_MAC
-	  PORT (
-	    gtx_clk : IN STD_LOGIC;
-	    glbl_rstn : IN STD_LOGIC;
-	    rx_axi_rstn : IN STD_LOGIC;
-	    tx_axi_rstn : IN STD_LOGIC;
-	    rx_statistics_vector : OUT STD_LOGIC_VECTOR(27 DOWNTO 0);
-	    rx_statistics_valid : OUT STD_LOGIC;
-	    rx_mac_aclk : OUT STD_LOGIC;
-	    rx_reset : OUT STD_LOGIC;
-	    rx_axis_mac_tdata : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    rx_axis_mac_tvalid : OUT STD_LOGIC;
-	    rx_axis_mac_tlast : OUT STD_LOGIC;
-	    rx_axis_mac_tuser : OUT STD_LOGIC;
-	    tx_ifg_delay : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    tx_statistics_vector : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-	    tx_statistics_valid : OUT STD_LOGIC;
-	    tx_mac_aclk : OUT STD_LOGIC;
-	    tx_reset : OUT STD_LOGIC;
-	    tx_axis_mac_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    tx_axis_mac_tvalid : IN STD_LOGIC;
-	    tx_axis_mac_tlast : IN STD_LOGIC;
-	    tx_axis_mac_tuser : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-	    tx_axis_mac_tready : OUT STD_LOGIC;
-	    pause_req : IN STD_LOGIC;
-	    pause_val : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-	    speedis100 : OUT STD_LOGIC;
-	    speedis10100 : OUT STD_LOGIC;
-	    gmii_txd : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    gmii_tx_en : OUT STD_LOGIC;
-	    gmii_tx_er : OUT STD_LOGIC;
-	    gmii_rxd : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-	    gmii_rx_dv : IN STD_LOGIC;
-	    gmii_rx_er : IN STD_LOGIC;
-	    rx_configuration_vector : IN STD_LOGIC_VECTOR(79 DOWNTO 0);
-	    tx_configuration_vector : IN STD_LOGIC_VECTOR(79 DOWNTO 0)
-	  );
+    PORT (
+		gtx_clk : IN STD_LOGIC;
+		glbl_rstn : IN STD_LOGIC;
+		rx_axi_rstn : IN STD_LOGIC;
+		tx_axi_rstn : IN STD_LOGIC;
+		rx_statistics_vector : OUT STD_LOGIC_VECTOR(27 DOWNTO 0);
+		rx_statistics_valid : OUT STD_LOGIC;
+		rx_mac_aclk : OUT STD_LOGIC;
+		rx_reset : OUT STD_LOGIC;
+		rx_axis_mac_tdata : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+		rx_axis_mac_tvalid : OUT STD_LOGIC;
+		rx_axis_mac_tlast : OUT STD_LOGIC;
+		rx_axis_mac_tuser : OUT STD_LOGIC;
+		tx_ifg_delay : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		tx_statistics_vector : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+		tx_statistics_valid : OUT STD_LOGIC;
+		tx_mac_aclk : OUT STD_LOGIC;
+		tx_reset : OUT STD_LOGIC;
+		tx_axis_mac_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		tx_axis_mac_tvalid : IN STD_LOGIC;
+		tx_axis_mac_tlast : IN STD_LOGIC;
+		tx_axis_mac_tuser : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+		tx_axis_mac_tready : OUT STD_LOGIC;
+		pause_req : IN STD_LOGIC;
+		pause_val : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		speedis100 : OUT STD_LOGIC;
+		speedis10100 : OUT STD_LOGIC;
+		gmii_txd : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+		gmii_tx_en : OUT STD_LOGIC;
+		gmii_tx_er : OUT STD_LOGIC;
+		gmii_rxd : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		gmii_rx_dv : IN STD_LOGIC;
+		gmii_rx_er : IN STD_LOGIC;
+		rx_configuration_vector : IN STD_LOGIC_VECTOR(79 DOWNTO 0);
+		tx_configuration_vector : IN STD_LOGIC_VECTOR(79 DOWNTO 0)
+	);
 	END COMPONENT;
 	ATTRIBUTE SYN_BLACK_BOX OF GIGE_MAC : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF GIGE_MAC : COMPONENT IS "gtx_clk,glbl_rstn,rx_axi_rstn,tx_axi_rstn,rx_statistics_vector[27:0],rx_statistics_valid,rx_mac_aclk,rx_reset,rx_axis_mac_tdata[7:0],rx_axis_mac_tvalid,rx_axis_mac_tlast,rx_axis_mac_tuser,tx_ifg_delay[7:0],tx_statistics_vector[31:0],tx_statistics_valid,tx_mac_aclk,tx_reset,tx_axis_mac_tdata[7:0],tx_axis_mac_tvalid,tx_axis_mac_tlast,tx_axis_mac_tuser[0:0],tx_axis_mac_tready,pause_req,pause_val[15:0],speedis100,speedis10100,gmii_txd[7:0],gmii_tx_en,gmii_tx_er,gmii_rxd[7:0],gmii_rx_dv,gmii_rx_er,rx_configuration_vector[79:0],tx_configuration_vector[79:0]";
@@ -247,7 +247,8 @@ package AtmIPCores is
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF XADC_TEMPERATURE : COMPONENT IS "di_in[15:0],daddr_in[6:0],den_in,dwe_in,drdy_out,do_out[15:0],dclk_in,reset_in,vp_in,vn_in,channel_out[4:0],eoc_out,alarm_out,eos_out,busy_out";
 
 	component ApsMsgProc
-	port (
+	port
+	(
 		-- Interface to MAC to get Ethernet packets
 		MAC_CLK       : in std_logic;                             -- Clock for command FIFO interface
 		RESET         : in std_logic;                             -- Reset for Command Interface
@@ -267,7 +268,7 @@ package AtmIPCores is
 		MAC_ADDRESS   : out std_logic_vector(47 downto 0);  -- MAC Address from EPROM
 
 		-- Board Type
---		BOARD_TYPE    : in std_logic_vector(7 downto 0) := x"00";    -- Board type returned in D<31:24> of Host firmware version, default to APS.  0x01 = Trigger
+		BOARD_TYPE    : in std_logic_vector(7 downto 0) := x"00";    -- Board type returned in D<31:24> of Host firmware version, default to APS.  0x01 = Trigger
 
 		-- User Logic Connections
 		USER_CLK       : in std_logic;                      -- Clock for User side of FIFO interface
@@ -306,7 +307,7 @@ package AtmIPCores is
 		-- Status to top level
 		GOOD_TOGGLE   : out std_logic;
 		BAD_TOGGLE    : out std_logic
-	);
+		);
 	end component;
 
 end AtmIPCores;
