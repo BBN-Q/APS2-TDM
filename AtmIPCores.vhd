@@ -268,7 +268,7 @@ package AtmIPCores is
 		MAC_ADDRESS   : out std_logic_vector(47 downto 0);  -- MAC Address from EPROM
 
 		-- Board Type
-		BOARD_TYPE    : in std_logic_vector(7 downto 0) := x"00";    -- Board type returned in D<31:24> of Host firmware version, default to APS.  0x01 = Trigger
+		BOARD_TYPE    : in std_logic_vector(7 downto 0) := x"01";    -- Board type returned in D<31:24> of Host firmware version, default to ATM.  0x01 = Trigger
 
 		-- User Logic Connections
 		USER_CLK       : in std_logic;                      -- Clock for User side of FIFO interface
