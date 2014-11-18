@@ -87,6 +87,8 @@ end ApsControl;
 
 architecture behavior of ApsControl is
 
+signal msg_rst : std_logic;
+
 -- RX MAC Configuration Vector
 signal rx_configuration_vector : std_logic_vector(79 downto 0)
        := x"0605040302DA" -- RX Pause Addr
@@ -381,7 +383,7 @@ begin
 
     -- User Logic Connections
     USER_CLK       => USER_CLK,
-    USER_RST       => USER_RST,
+    USER_RST       => msg_rst,
     USER_VERSION   => USER_VERSION,
     USER_STATUS    => USER_STATUS,
 
@@ -417,5 +419,9 @@ begin
     GOOD_TOGGLE   => GoodToggle,
     BAD_TOGGLE    => BadToggle
   );
+
+-- msg processor doesn't properly synchronize USER_RST to USER_CLK domain
+sync_user_rst : entity work.synchronizer
+port map ( reset => RESET, clk => USER_CLK, i_data => msg_rst, o_data => USER_RST);
 
 end behavior;

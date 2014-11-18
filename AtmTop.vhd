@@ -135,7 +135,9 @@ signal SfpTimer     : std_logic_vector(24 downto 0);
 
 signal LedToggle : std_logic_vector(27 downto 0);
 signal LedRed : std_logic;
+signal ChannelOn      : std_logic;
 
+-- Trigger signals
 type BYTE_ARRAY is array (0 to 8) of std_logic_vector(7 downto 0); 
 signal TrigOutDat     : BYTE_ARRAY;
 signal TrigWr         : std_logic_vector(8 downto 0);
@@ -145,25 +147,14 @@ signal TrigInDat      : std_logic_vector(7 downto 0);
 signal TrigInChk      : std_logic_vector(7 downto 0);
 signal TrigClkErr     : std_logic;
 signal TrigOvflErr    : std_logic;
-signal TrigLocked     : std_logic := '1';
+signal TrigLocked     : std_logic;
 signal TrigInReady    : std_logic;
 signal TrigInRd       : std_logic;
 signal TrigFull       : std_logic;
-signal ChannelOn      : std_logic;
-signal TrigEn         : std_logic_vector(3 downto 0);
 
 signal CMP : std_logic_vector(7 downto 0);
 
-signal TestFull   : std_logic;
-signal TestEmpty  : std_logic;
-signal TestDat    : std_logic_vector(7 downto 0);
-signal TestDin    : std_logic_vector(7 downto 0);
-signal TestRd     : std_logic;
-signal TestRdEn   : std_logic;
-signal TestWr     : std_logic;
-signal TestActive   : std_logic;
-signal FifoReset   : std_logic;
-
+-- Temperature signals
 signal DrpData : std_logic_vector(15 downto 0);
 signal CurTemp : std_logic_vector(15 downto 0);
 signal DrpEn : std_logic;
@@ -652,32 +643,6 @@ begin
 		end if;
 	end process;
 
-	-- Advance the FIFO when you have finished sending the current data
-	-- TrigInRd <= TrigInReady;
-
-	-- -- Use the extra STA connector as a test input
-	-- TIL1 : entity work.TriggerInLogic
-	-- port map
-	-- (
-	-- 	USER_CLK   => CLK_100MHZ,
-	-- 	CLK_200MHZ => CLK_200MHZ,
-	-- 	RESET      => USER_RST,
-	
-	-- 	TRIG_CLKP  => TRIG_CTRLP(0),
-	-- 	TRIG_CLKN  => TRIG_CTRLN(0),
-	-- 	TRIG_DATP  => TRIG_CTRLP(1),
-	-- 	TRIG_DATN  => TRIG_CTRLN(1),
-	
-	-- 	TRIG_NEXT  => TrigInRd,  -- Always read data when it is available
-		
-	-- 	TRIG_LOCKED => TrigLocked,
-	-- 	TRIG_ERR   => TrigClkErr,
-	-- 	TRIG_RX    => TrigInDat,
-	-- 	TRIG_OVFL  => TrigOvflErr,
-	-- 	TRIG_READY => TrigInReady
-	-- );
-
-	-- Modified to allow use of I/O buffer
 	TO1 : for i in 0 to 8 generate
 		-- Externally, cable routing requires a non sequential JTx to TOx routing.
 		-- The cables are routed from the PCB connectors to the front panel as shown below.
@@ -713,6 +678,31 @@ begin
 			TRIG_DATN  => TRGDAT_OUTN(i)
 		);		
 	end generate;
+
+	-- Instantiate LVDS 8:1 logic on auxiliary SATA port
+	TIL1 : entity work.TriggerInLogic
+	port map
+	(
+		USER_CLK   => CLK_100MHZ,
+		CLK_200MHZ => CLK_200MHZ,
+		RESET      => USER_RST,
+	
+		TRIG_CLKP  => TRIG_CTRLP(0),
+		TRIG_CLKN  => TRIG_CTRLN(0),
+		TRIG_DATP  => TRIG_CTRLP(1),
+		TRIG_DATN  => TRIG_CTRLN(1),
+	
+		TRIG_NEXT  => TrigInRd,  -- Always read data when it is available
+		
+		TRIG_LOCKED => TrigLocked,
+		TRIG_ERR   => TrigClkErr,
+		TRIG_RX    => TrigInDat,
+		TRIG_OVFL  => TrigOvflErr,
+		TRIG_READY => TrigInReady
+	);
+
+	-- Continually drain the input FIFO
+	TrigInRd <= TrigInReady;
 
 	-- 8 channels of PWM 
 	PWM1 : for i in 0 to 7 generate

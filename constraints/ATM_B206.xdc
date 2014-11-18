@@ -336,13 +336,14 @@ set_property DIFF_TERM TRUE [get_ports {TRIG_CTRLN[1]}]
 set_property DIFF_TERM TRUE [get_ports {TRIG_CTRLP[0]}]
 set_property DIFF_TERM TRUE [get_ports {TRIG_CTRLP[1]}]
 
-#create_pblock pblock_TIL1
-#add_cells_to_pblock [get_pblocks pblock_TIL1] [get_cells -quiet [list TIL1]]
-#resize_pblock [get_pblocks pblock_TIL1] -add {CLOCKREGION_X0Y0:CLOCKREGION_X0Y0}
-
-# Must LOC IDELAYCTRL for Auxiliary trigger input to avoid mapping errors
-# LOC required if there is more than one IDELAYCTRL in the design
+# Must LOC IDELAYCTRL if there is more than one IDELAYCTRL in the design
+# create_pblock pblock_TIL1
+# add_cells_to_pblock [get_pblocks pblock_TIL1] [get_cells -quiet [list TIL1]]
+# resize_pblock [get_pblocks pblock_TIL1] -add {CLOCKREGION_X0Y0:CLOCKREGION_X0Y0}
 # set_property LOC IDELAYCTRL_X1Y2 [get_cells TIL1/IDC1]
+
+# Define 100 MHz clock on Aux SATA input
+create_clock -period 10.000 -name TAUX_CLK -waveform {0.000 5.000} [get_pins TIL1/SIN1/O]
 
 # Extra SMA I/O pins
 #set_property PACKAGE_PIN AF4  [get_ports {TRIGIO_A[0]}]

@@ -75,7 +75,6 @@ signal FirstClk     : std_logic_vector(7 downto 0);
 signal SerDat       : std_logic_vector(7 downto 0);
 signal TrigDat      : std_logic_vector(7 downto 0);
 signal TrigLocked   : std_logic;
-signal sTrigLocked   : std_logic;
 signal DelayReady   : std_logic;
 signal FirstFound   : std_logic;
 signal DlyVal       : std_logic_vector(5 downto 0);
@@ -88,13 +87,11 @@ signal DbgTrigState : std_logic_vector(2 downto 0);
 signal TrigRst      : std_logic;
 signal BitSlip      : std_logic;
 signal TrigErr      : std_logic;
-signal sTrigErr     : std_logic;
 signal TrigFull     : std_logic;
 signal TrigValid    : std_logic;
 signal TrigDone     : std_logic;
 signal TrigEmpty    : std_logic;
 signal sTrigDone    : std_logic;
-signal sTRIG_OVFL   : std_logic;
 signal TrigOvfl     : std_logic;
 signal SlipCnt      : std_logic_vector(3 downto 0);
 
@@ -124,33 +121,6 @@ begin
              else "110" when TrigState = TRIG_ALIGN
              else "111" when TrigState = TRIG_DONE
              else "000";
-
-
-  -- Locked and alined when you are in the done state
-  process(USER_CLK, RESET)
-  begin
-    if RESET = '1' then
-      sTrigDone <= '0';
-      TRIG_LOCKED <= '0';
-      sTrigErr <= '0';
-      TRIG_ERR <= '0';
-      TRIG_OVFL <= '0';
-      sTRIG_OVFL <= '0';
-    elsif rising_edgE(USER_CLK) then
-      -- Double synchronized lock state, set when the receiver is ready to receive triggesrs
-      sTrigDone <= TrigDone;
-      TRIG_LOCKED <= sTrigDone;
-
-      -- Double synchronized error state, set when invlaid clock pattern received after initial lock
-      sTrigErr <= TrigErr;
-      TRIG_ERR <= sTrigErr;
-
-      -- Double synchronized overflow flag, set when trigger receive FIFO overflows because not read fast enough by user
-      sTRIG_OVFL <= TrigOvfl;
-      TRIG_OVFL <= sTRIG_OVFL;
-    end if;
-
-  end process;
 
   -- Trigger 1 Received Clock
   BTC1 : IBUFDS
@@ -609,5 +579,13 @@ begin
   );
 
   TRIG_READY <= not TrigEmpty;
+
+  -- sync control signals onto USER_CLK
+  sync_ovfl : entity work.synchronizer
+  port map ( reset => RESET, clk => USER_CLK, i_data => TrigOvfl, o_data => TRIG_OVFL);
+  sync_locked : entity work.synchronizer
+  port map ( reset => RESET, clk => USER_CLK, i_data => TrigDone, o_data => TRIG_LOCKED);
+  sync_err : entity work.synchronizer
+  port map ( reset => RESET, clk => USER_CLK, i_data => TrigErr, o_data => TRIG_ERR);
 
 end behavior;
