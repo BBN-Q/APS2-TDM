@@ -310,6 +310,62 @@ package AtmIPCores is
 		);
 	end component;
 
+	component Memory is
+	port (
+		AXI_resetn : out STD_LOGIC_VECTOR ( 0 to 0 );
+		clk_axi : in STD_LOGIC;
+		clk_axi_locked : in STD_LOGIC;
+		ethernet_mm2s_err : out STD_LOGIC;
+		ethernet_s2mm_err : out STD_LOGIC;
+		reset : in STD_LOGIC;
+		ethernet_mm2s_tdata : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		ethernet_mm2s_tkeep : out STD_LOGIC_VECTOR ( 3 downto 0 );
+		ethernet_mm2s_tlast : out STD_LOGIC;
+		ethernet_mm2s_tready : in STD_LOGIC;
+		ethernet_mm2s_tvalid : out STD_LOGIC;
+		ethernet_mm2s_sts_tdata : out STD_LOGIC_VECTOR ( 7 downto 0 );
+		ethernet_mm2s_sts_tkeep : out STD_LOGIC_VECTOR ( 0 to 0 );
+		ethernet_mm2s_sts_tlast : out STD_LOGIC;
+		ethernet_mm2s_sts_tready : in STD_LOGIC;
+		ethernet_mm2s_sts_tvalid : out STD_LOGIC;
+		ethernet_s2mm_sts_tdata : out STD_LOGIC_VECTOR ( 7 downto 0 );
+		ethernet_s2mm_sts_tkeep : out STD_LOGIC_VECTOR ( 0 to 0 );
+		ethernet_s2mm_sts_tlast : out STD_LOGIC;
+		ethernet_s2mm_sts_tready : in STD_LOGIC;
+		ethernet_s2mm_sts_tvalid : out STD_LOGIC;
+		ethernet_mm2s_cmd_tdata : in STD_LOGIC_VECTOR ( 71 downto 0 );
+		ethernet_mm2s_cmd_tready : out STD_LOGIC;
+		ethernet_mm2s_cmd_tvalid : in STD_LOGIC;
+		ethernet_s2mm_tdata : in STD_LOGIC_VECTOR ( 31 downto 0 );
+		ethernet_s2mm_tkeep : in STD_LOGIC_VECTOR ( 3 downto 0 );
+		ethernet_s2mm_tlast : in STD_LOGIC;
+		ethernet_s2mm_tready : out STD_LOGIC;
+		ethernet_s2mm_tvalid : in STD_LOGIC;
+		ethernet_s2mm_cmd_tdata : in STD_LOGIC_VECTOR ( 71 downto 0 );
+		ethernet_s2mm_cmd_tready : out STD_LOGIC;
+		ethernet_s2mm_cmd_tvalid : in STD_LOGIC;
+		CSR_awaddr : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_awprot : out STD_LOGIC_VECTOR ( 2 downto 0 );
+		CSR_awvalid : out STD_LOGIC;
+		CSR_awready : in STD_LOGIC;
+		CSR_wdata : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_wstrb : out STD_LOGIC_VECTOR ( 3 downto 0 );
+		CSR_wvalid : out STD_LOGIC;
+		CSR_wready : in STD_LOGIC;
+		CSR_bresp : in STD_LOGIC_VECTOR ( 1 downto 0 );
+		CSR_bvalid : in STD_LOGIC;
+		CSR_bready : out STD_LOGIC;
+		CSR_araddr : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_arprot : out STD_LOGIC_VECTOR ( 2 downto 0 );
+		CSR_arvalid : out STD_LOGIC;
+		CSR_arready : in STD_LOGIC;
+		CSR_rdata : in STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_rresp : in STD_LOGIC_VECTOR ( 1 downto 0 );
+		CSR_rvalid : in STD_LOGIC;
+		CSR_rready : out STD_LOGIC
+	);
+	end component Memory;
+
 end AtmIPCores;
 
 package body AtmIPCores is

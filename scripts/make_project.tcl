@@ -31,6 +31,16 @@ set_property target_constrs_file $source_dir/constraints/ATM_B206.xdc [current_f
 set ip_srcs [glob $source_dir/ip/*.xci]
 import_ip $ip_srcs
 
+#Memory BD
+source $source_dir/scripts/Memory.tcl
+regenerate_bd_layout
+validate_bd_design
+save_bd_design
+generate_target all [get_files  $project_dir/$project_name/$project_name.srcs/sources_1/bd/Memory/Memory.bd]
+close_bd_design [get_bd_designs Memory]
+#make it out-of-context to speed up synthesis
+create_fileset -blockset -define_from Memory Memory
+
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
 

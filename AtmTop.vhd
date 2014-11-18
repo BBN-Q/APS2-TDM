@@ -411,7 +411,7 @@ begin
 		STATUS       => STATUS
 	);
 
-	myMemory : entity work.Memory
+	myMemory : Memory
 	port map (
 
 	    reset => GlobalReset,
