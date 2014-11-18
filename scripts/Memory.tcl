@@ -153,6 +153,7 @@ proc create_root_design { parentCell } {
   set ethernet_mm2s_err [ create_bd_port -dir O ethernet_mm2s_err ]
   set ethernet_s2mm_err [ create_bd_port -dir O ethernet_s2mm_err ]
   set reset [ create_bd_port -dir I -type rst reset ]
+  set_property -dict [ list CONFIG.POLARITY {ACTIVE_HIGH}  ] $reset
 
   # Create instance: DataMover_Ethernet, and set properties
   set DataMover_Ethernet [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 DataMover_Ethernet ]
@@ -167,6 +168,7 @@ proc create_root_design { parentCell } {
 
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
+  set_property -dict [ list CONFIG.CONST_VAL {0}  ] $xlconstant_0
 
   # Create interface connections
   connect_bd_intf_net -intf_net DataMover_Ethernet_M_AXIS_MM2S [get_bd_intf_ports ethernet_mm2s] [get_bd_intf_pins DataMover_Ethernet/M_AXIS_MM2S]
