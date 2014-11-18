@@ -8,20 +8,83 @@ use work.EthernetFrame.all;
 use work.IPv4Header.all;
 
 entity UDP_tb is
+generic (
+    SIM_SEQ_FILE : string := "";
+    APS_REPO_PATH : string := ""
+);
 end UDP_tb;
 
 architecture Behavioral of UDP_tb is
+
+	component Memory is
+	port (
+		AXI_resetn : out STD_LOGIC_VECTOR ( 0 to 0 );
+		clk_axi : in STD_LOGIC;
+		clk_axi_locked : in STD_LOGIC;
+		ethernet_mm2s_err : out STD_LOGIC;
+		ethernet_s2mm_err : out STD_LOGIC;
+		reset : in STD_LOGIC;
+		ethernet_mm2s_tdata : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		ethernet_mm2s_tkeep : out STD_LOGIC_VECTOR ( 3 downto 0 );
+		ethernet_mm2s_tlast : out STD_LOGIC;
+		ethernet_mm2s_tready : in STD_LOGIC;
+		ethernet_mm2s_tvalid : out STD_LOGIC;
+		ethernet_mm2s_sts_tdata : out STD_LOGIC_VECTOR ( 7 downto 0 );
+		ethernet_mm2s_sts_tkeep : out STD_LOGIC_VECTOR ( 0 to 0 );
+		ethernet_mm2s_sts_tlast : out STD_LOGIC;
+		ethernet_mm2s_sts_tready : in STD_LOGIC;
+		ethernet_mm2s_sts_tvalid : out STD_LOGIC;
+		ethernet_s2mm_sts_tdata : out STD_LOGIC_VECTOR ( 7 downto 0 );
+		ethernet_s2mm_sts_tkeep : out STD_LOGIC_VECTOR ( 0 to 0 );
+		ethernet_s2mm_sts_tlast : out STD_LOGIC;
+		ethernet_s2mm_sts_tready : in STD_LOGIC;
+		ethernet_s2mm_sts_tvalid : out STD_LOGIC;
+		ethernet_mm2s_cmd_tdata : in STD_LOGIC_VECTOR ( 71 downto 0 );
+		ethernet_mm2s_cmd_tready : out STD_LOGIC;
+		ethernet_mm2s_cmd_tvalid : in STD_LOGIC;
+		ethernet_s2mm_tdata : in STD_LOGIC_VECTOR ( 31 downto 0 );
+		ethernet_s2mm_tkeep : in STD_LOGIC_VECTOR ( 3 downto 0 );
+		ethernet_s2mm_tlast : in STD_LOGIC;
+		ethernet_s2mm_tready : out STD_LOGIC;
+		ethernet_s2mm_tvalid : in STD_LOGIC;
+		ethernet_s2mm_cmd_tdata : in STD_LOGIC_VECTOR ( 71 downto 0 );
+		ethernet_s2mm_cmd_tready : out STD_LOGIC;
+		ethernet_s2mm_cmd_tvalid : in STD_LOGIC;
+		CSR_awaddr : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_awprot : out STD_LOGIC_VECTOR ( 2 downto 0 );
+		CSR_awvalid : out STD_LOGIC;
+		CSR_awready : in STD_LOGIC;
+		CSR_wdata : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_wstrb : out STD_LOGIC_VECTOR ( 3 downto 0 );
+		CSR_wvalid : out STD_LOGIC;
+		CSR_wready : in STD_LOGIC;
+		CSR_bresp : in STD_LOGIC_VECTOR ( 1 downto 0 );
+		CSR_bvalid : in STD_LOGIC;
+		CSR_bready : out STD_LOGIC;
+		CSR_araddr : out STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_arprot : out STD_LOGIC_VECTOR ( 2 downto 0 );
+		CSR_arvalid : out STD_LOGIC;
+		CSR_arready : in STD_LOGIC;
+		CSR_rdata : in STD_LOGIC_VECTOR ( 31 downto 0 );
+		CSR_rresp : in STD_LOGIC_VECTOR ( 1 downto 0 );
+		CSR_rvalid : in STD_LOGIC;
+		CSR_rready : out STD_LOGIC
+	);
+	end component Memory;
+
 
 --Clocks and resets
 constant USER_CLK_PERIOD : time := 10 ns;
 constant MAC_CLK_PERIOD : time := 8 ns;
 constant SYS_CLK_PERIOD : time := 3.33333333333333333 ns;
+constant CFG_CLK_PERIOD : time := 10.1 ns;
 
 signal SYS_CLK       : std_logic := '0';                     
 signal USER_CLK       : std_logic := '0';                     
-signal USER_RST       : std_logic := '0';                    
-
+signal CFG_CLK       : std_logic := '0';                     
 signal MAC_CLK 		 : std_logic := '0';
+
+signal USER_RST       : std_logic := '0';                    
 signal RESET         : std_logic := '0';
 
 --Interposing MAC signals between the Xilinx trimac and the APSMsgProc
@@ -46,7 +109,6 @@ signal MAC_TX_VALID_msgproc : std_logic := '0';
 signal MAC_TX_EOP_msgproc : std_logic := '0';
 
 --APSMsgProc user signals
-signal USER_VERSION   : std_logic_vector(31 downto 0) := (others => '0'); 
 signal USER_STATUS    : std_logic_vector(31 downto 0) := (others => '0'); 
 
 signal USER_DIF       : std_logic_vector(31 downto 0) := (others => '0');
@@ -69,34 +131,58 @@ signal USER_COF_WR    : std_logic := '0';
 
 signal GoodToggle, BadToggle : std_logic := '0';
 
---Ethernet DataMover command and status
-signal ETHERNET_MM2S_tdata : STD_LOGIC_VECTOR ( 31 downto 0 ) := (others => '0');
-signal ETHERNET_MM2S_tkeep : STD_LOGIC_VECTOR ( 3 downto 0 ) := (others => '0');
-signal ETHERNET_MM2S_tlast : STD_LOGIC := '0';
-signal ETHERNET_MM2S_tready : STD_LOGIC := '0';
-signal ETHERNET_MM2S_tvalid : STD_LOGIC := '0';
-signal ETHERNET_S2MM_tdata : STD_LOGIC_VECTOR ( 31 downto 0 ) := (others => '0');
-signal ETHERNET_S2MM_tkeep : STD_LOGIC_VECTOR ( 3 downto 0 ) := (others => '1'); -- assuming 32bit words 
-signal ETHERNET_S2MM_tlast : STD_LOGIC := '0';
-signal ETHERNET_S2MM_tvalid : STD_LOGIC := '0';
-signal ETHERNET_S2MM_tready : STD_LOGIC := '0';
+--CSR AXI Lite
 
-signal ETHERNET_S2MM_STS_tdata : STD_LOGIC_VECTOR ( 7 downto 0 ) := (others => '0');
-signal ETHERNET_S2MM_STS_tkeep : STD_LOGIC_VECTOR ( 0 to 0 );
-signal ETHERNET_S2MM_STS_tlast : STD_LOGIC := '0';
-signal ETHERNET_S2MM_STS_tready : STD_LOGIC := '0';
-signal ETHERNET_S2MM_STS_tvalid : STD_LOGIC := '0';
-signal ETHERNET_MM2S_STS_tdata : STD_LOGIC_VECTOR ( 7 downto 0 ) := (others => '0');
-signal ETHERNET_MM2S_STS_tkeep : STD_LOGIC_VECTOR ( 0 to 0 );
-signal ETHERNET_MM2S_STS_tlast : STD_LOGIC := '0';
-signal ETHERNET_MM2S_STS_tready : STD_LOGIC := '0';
-signal ETHERNET_MM2S_STS_tvalid : STD_LOGIC := '0';
-signal ETHERNET_S2MM_CMD_tdata : STD_LOGIC_VECTOR ( 71 downto 0 ) := (others => '0');
-signal ETHERNET_S2MM_CMD_tready : STD_LOGIC := '0';
-signal ETHERNET_S2MM_CMD_tvalid : STD_LOGIC := '0';
-signal ETHERNET_MM2S_CMD_tdata : STD_LOGIC_VECTOR ( 71 downto 0 ) := (others => '0');
-signal ETHERNET_MM2S_CMD_tready : STD_LOGIC := '0';
-signal ETHERNET_MM2S_CMD_tvalid : STD_LOGIC := '0';
+signal CSR_araddr :  STD_LOGIC_VECTOR ( 31 downto 0 );
+signal CSR_arprot :  STD_LOGIC_VECTOR ( 2 downto 0 );
+signal CSR_arready : STD_LOGIC;
+signal CSR_arvalid : STD_LOGIC;
+signal CSR_awaddr :  STD_LOGIC_VECTOR ( 31 downto 0 );
+signal CSR_awprot :  STD_LOGIC_VECTOR ( 2 downto 0 );
+signal CSR_awready : STD_LOGIC;
+signal CSR_awvalid : STD_LOGIC;
+signal CSR_bready :  STD_LOGIC;
+signal CSR_bresp : STD_LOGIC_VECTOR ( 1 downto 0 );
+signal CSR_bvalid : STD_LOGIC;
+signal CSR_rdata : STD_LOGIC_VECTOR ( 31 downto 0 );
+signal CSR_rready :  STD_LOGIC;
+signal CSR_rresp : STD_LOGIC_VECTOR ( 1 downto 0 );
+signal CSR_rvalid : STD_LOGIC;
+signal CSR_wdata :  STD_LOGIC_VECTOR ( 31 downto 0 );
+signal CSR_wready : STD_LOGIC;
+signal CSR_wstrb :  STD_LOGIC_VECTOR ( 3 downto 0 );
+signal CSR_wvalid :  STD_LOGIC;
+
+--Ethernet DataMover command and status
+signal ethernet_mm2s_tdata : std_logic_vector ( 31 downto 0 ) := (others => '0');
+signal ethernet_mm2s_tkeep : std_logic_vector ( 3 downto 0 ) := (others => '0');
+signal ethernet_mm2s_tlast : std_logic := '0';
+signal ethernet_mm2s_tready : std_logic := '0';
+signal ethernet_mm2s_tvalid : std_logic := '0';
+signal ethernet_s2mm_tdata : std_logic_vector ( 31 downto 0 ) := (others => '0');
+signal ethernet_s2mm_tkeep : std_logic_vector ( 3 downto 0 ) := (others => '1'); -- assuming 32bit words 
+signal ethernet_s2mm_tlast : std_logic := '0';
+signal ethernet_s2mm_tvalid : std_logic := '0';
+signal ethernet_s2mm_tready : std_logic := '0';
+
+signal ethernet_s2mm_sts_tdata : std_logic_vector ( 7 downto 0 ) := (others => '0');
+signal ethernet_s2mm_sts_tkeep : std_logic_vector ( 0 to 0 );
+signal ethernet_s2mm_sts_tlast : std_logic := '0';
+signal ethernet_s2mm_sts_tready : std_logic := '0';
+signal ethernet_s2mm_sts_tvalid : std_logic := '0';
+signal ethernet_mm2s_sts_tdata : std_logic_vector ( 7 downto 0 ) := (others => '0');
+signal ethernet_mm2s_sts_tkeep : std_logic_vector ( 0 to 0 );
+signal ethernet_mm2s_sts_tlast : std_logic := '0';
+signal ethernet_mm2s_sts_tready : std_logic := '0';
+signal ethernet_mm2s_sts_tvalid : std_logic := '0';
+signal ethernet_s2mm_cmd_tdata : std_logic_vector ( 71 downto 0 ) := (others => '0');
+signal ethernet_s2mm_cmd_tready : std_logic := '0';
+signal ethernet_s2mm_cmd_tvalid : std_logic := '0';
+signal ethernet_mm2s_cmd_tdata : std_logic_vector ( 71 downto 0 ) := (others => '0');
+signal ethernet_mm2s_cmd_tready : std_logic := '0';
+signal ethernet_mm2s_cmd_tvalid : std_logic := '0';
+signal ethernet_s2mm_err : std_logic := '0';
+signal ethernet_mm2s_err : std_logic := '0';
 
 --Status register responses
 signal HOST_FIRMWARE_VER, USER_FIRMWARE_VER : std_logic_vector(31 downto 0) := (others => '0');
@@ -106,54 +192,13 @@ signal FPGA_TEMPERATURE : std_logic_vector(31 downto 0) := (others => '0');
 signal SEND_PKT_COUNT, RECV_PKT_COUNT, SKIP_PKT_COUNT, DUP_PKT_COUNT, FCS_ERR_COUNT, OVERRUN_COUNT : natural := 0; 
 signal UPTIME_SEC, UPTIME_NSEC : natural := 0;
 
---Pass through signals from block design to BRAMs
-signal wfA_en : STD_LOGIC;
-signal wfA_dout : STD_LOGIC_VECTOR ( 127 downto 0 );
-signal wfA_din : STD_LOGIC_VECTOR ( 127 downto 0 );
-signal wfA_we : STD_LOGIC_VECTOR ( 15 downto 0 );
-signal wfA_addr : STD_LOGIC_VECTOR ( 14 downto 0 );
-signal wfA_clk : STD_LOGIC;
-signal wfA_rst : STD_LOGIC;
-
-signal wfB_en : STD_LOGIC;
-signal wfB_dout : STD_LOGIC_VECTOR ( 127 downto 0 );
-signal wfB_din : STD_LOGIC_VECTOR ( 127 downto 0 );
-signal wfB_we : STD_LOGIC_VECTOR ( 15 downto 0 );
-signal wfB_addr : STD_LOGIC_VECTOR ( 14 downto 0 );
-signal wfB_clk : STD_LOGIC;
-signal wfB_rst : STD_LOGIC;
-
-signal SEQ_en : STD_LOGIC;
-signal SEQ_dout : STD_LOGIC_VECTOR ( 127 downto 0 );
-signal SEQ_din : STD_LOGIC_VECTOR ( 127 downto 0 );
-signal SEQ_we : STD_LOGIC_VECTOR ( 15 downto 0 );
-signal SEQ_addr : STD_LOGIC_VECTOR ( 14 downto 0 );
-signal SEQ_clk : STD_LOGIC;
-signal SEQ_rst : STD_LOGIC;
-
---CSR outputs
-signal cache_status : STD_LOGIC_VECTOR ( 31 downto 0 ) := (others => '0');
-signal cache_control : STD_LOGIC_VECTOR ( 31 downto 0 );
-signal wfa_offset : STD_LOGIC_VECTOR ( 31 downto 0 );
-signal wfb_offset : STD_LOGIC_VECTOR ( 31 downto 0 );
-signal seq_offset : STD_LOGIC_VECTOR ( 31 downto 0 );
-signal sequencer_control : STD_LOGIC_VECTOR ( 31 downto 0 );
-
-
---Cache BRAM signals
-signal SEQ_doutb : std_logic_vector(127 downto 0) := (others => '0');
-signal SEQ_addrb : std_logic_vector(10 downto 0) := (others => '0');
-
-signal WFA_doutb : std_logic_vector(63 downto 0) := (others => '0');
-signal WFA_addrb : std_logic_vector(11 downto 0) := (others => '0');
-
-signal WFB_doutb : std_logic_vector(63 downto 0) := (others => '0');
-signal WFB_addrb : std_logic_vector(11 downto 0) := (others => '0');
-
+--CSR inputs/outputs
+signal resets, controls : std_logic_vector(31 downto 0) ;
+signal AXI_resetn : std_logic;
 
 type TestbenchStates_t is (RESETTING, ARP_QUERY, STATUS_REQUEST, SINGLE_WORD_WRITE, SINGLE_WORD_READ, 
 								WRONG_IP_PACKET, MULTI_WORD_WRITE, MULTI_WORD_READ, BAD_FRAME_TEST, 
-								SEQUENCE_NUMBERING, CSR_WRITE, CSR_READ, FINISHED);
+								SEQUENCE_NUMBERING, CSR_WRITE, CSR_READ, WRITE_MULTIPLE_PACKETS, FINISHED);
 signal testbenchState : TestbenchStates_t;
 
 begin
@@ -174,6 +219,14 @@ begin
 	wait for USER_CLK_PERIOD/2;
 	USER_CLK <= '1';
 	wait for USER_CLK_PERIOD/2;
+end process;
+
+cfg_clk_process :process
+begin
+	CFG_CLK <= '0';
+	wait for CFG_CLK_PERIOD/2;
+	CFG_CLK <= '1';
+	wait for CFG_CLK_PERIOD/2;
 end process;
 
 sys_clk_process :process
@@ -207,6 +260,7 @@ variable myUDPHeader : UDPHeader_t;
 variable emptyPayload : APSPayload_t(0 to -1);
 variable testData1 : APSPayload_t(0 to 3);
 variable testData2 : APSPayload_t(0 to 255);
+variable testData3 : APSPayload_t(0 to 1023);
 variable byteCount : natural := 0;
 
 --Procedure to read status registers off of returning MAC byte stream
@@ -395,7 +449,7 @@ begin
 	--Error checking after one clock cycle to catch last register updates
 	wait until rising_edge(MAC_CLK);
 	assert (HOST_FIRMWARE_VER = x"00000a01") report "Status registers: HOST_FIRMWARE_VER incorrect";
-	assert (USER_FIRMWARE_VER = x"00000a02") report "Status registers: USER_FIRMWARE_VER incorrect";
+	assert (USER_FIRMWARE_VER = x"00000212") report "Status registers: USER_FIRMWARE_VER incorrect";
 	assert (CONFIG_SOURCE = x"bbbbbbbb") report "Status registers: CONFIG_SOURCE incorrect";
 	assert (SEND_PKT_COUNT = 0) report "Status registers: SEND_PKT_COUNT incorrect";
 	assert (RECV_PKT_COUNT = 1) report "Status registers: RECV_PKT_COUNT incorrect";
@@ -403,105 +457,10 @@ begin
 	assert (UPTIME_SEC = 0) report "Status registers: UPTIME_SEC incorrect";
 	assert (UPTIME_NSEC = 1536) report "Status registers: UPTIME_NSEC incorrect";
 
---Doesn't seem to work....
-	-- -- Clock in a soft reset
-	-- MAC_RX_VALID_trimac <= '1';
-	-- write_MAC_addr(destMAC, MAC_RXD_trimac, MAC_CLK);
-	-- write_MAC_addr(srcMAC, MAC_RXD_trimac, MAC_CLK);
-	-- -- frame type
-	-- MAC_RXD_trimac <= x"08"; wait until rising_edge(MAC_CLK);
-	-- MAC_RXD_trimac <= x"00"; wait until rising_edge(MAC_CLK);
-
-	-- myIPHeader.srcIP := (x"c0", x"a8", x"05", x"01");
-	-- myIPHeader.destIP := (x"c0", x"a8", x"05", x"09");
-	-- myIPHeader.totalLength := 64;
-	-- myIPHeader.protocol := x"11";
-	-- write_IPv4Header(myIPHeader, MAC_RXD_trimac, MAC_CLK);
-
-	-- myUDPHeader.srcPort := 47950;
-	-- myUDPHeader.destPort := 47950;
-	-- myUDPHeader.totalLength := 48;
-	-- write_UDPHeader(myUDPHeader, MAC_RXD_trimac, MAC_CLK);
-
-	-- -- user data is APSEthernetFrame
-	-- myFrameHeader.destMAC := (x"FF", x"FF", x"FF", x"FF", x"FF", x"FF");
-	-- myFrameHeader.srcMAC := (x"BA", x"AD", x"BA", x"AD", x"BA", x"AD");
-	-- --command
-	-- myFrameHeader.command := myCommand;
-	-- myFrameHeader.command.rw := '0';
-	-- myFrameHeader.command.cmd := x"0";
-	-- myFrameHeader.command.mode := x"02";
-	-- myFrameHeader.command.cnt := std_logic_vector( to_unsigned(0, 16));
-	-- myFrameHeader.addr := (others => '0');
-	
-	-- write_APSEthernet_frame(myFrameHeader, emptyPayload, MAC_RXD_trimac, MAC_CLK, MAC_RX_VALID_trimac, MAC_RX_EOP_trimac);
-
-
-	-- --APSMsgProc will send back status registers
-	-- --TODO: error checking
-	-- wait until rising_edge(MAC_TX_EOP_trimac);
-
 
 	---------------------------------------------------------------------------------------------------------
 
-	-- Clock in a single word UDP write
-	-- user data is APSEthernetFrame
-	--command
-
-	testbenchState <= SINGLE_WORD_WRITE;
-
-	myFrameHeader.command.rw := '0';
-	myFrameHeader.command.cmd := x"9";
-	myFrameHeader.command.cnt := std_logic_vector( to_unsigned(1, 16));
-	myFrameHeader.command.mode := x"00";
-	myFrameHeader.addr := x"2000" & std_logic_vector(to_unsigned(4, 16));
-	testData1(0) := x"12"; 	testData1(1) := x"34"; 	testData1(2) := x"56"; 	testData1(3) := x"78";
-
-	myFrameHeader.destMAC := (x"00", x"22", x"33", x"44", x"55", x"66");
-
-	myIPHeader.totalLength := 20+8+14+10+testData1'length;
-	myUDPHeader.totalLength := 8+14+10+testData1'length;
-
-	write_complete_frame(testData1);
-
-	---------------------------------------------------------------------------------------------------------
-
-	-- Clock in a packet to a different IP from a different IP to make sure it is filtered
-
-	testbenchState <= WRONG_IP_PACKET;
-
-	myIPHeader.destIP := (x"aa", x"bb", x"cc", x"dd");	
-	myIPHeader.srcIP := (x"ba", x"ad", x"ba", x"ad");	
-	myFrameHeader.destMAC := (x"BA", x"AD", x"F0", x"0F", x"BA", x"AD");
-
-	write_complete_frame(testData1);
-
-	--TODO: error checking
-	wait until rising_edge(MAC_TX_EOP_trimac);
-
-	---------------------------------------------------------------------------------------------------------
-
-	-- Clock in a single word UDP read request
-
-	testbenchState <= SINGLE_WORD_READ;
-
-	--Fix-up headers
-	myIPHeader.destIP := (x"c0", x"a8", x"05", x"09");
-	myIPHeader.srcIP := (x"c0", x"a8", x"05", x"01");
-	myFrameHeader.destMAC := (x"00", x"22", x"33", x"44", x"55", x"66");
-	myFrameHeader.command.rw := '1';
-	myIPHeader.totalLength := 20+8+14+10;
-	myUDPHeader.totalLength := 8+14+10;
-
-	write_complete_frame(emptyPayload);
-
-	--Check the data came back
-	check_read_data(testData1);
-
-
-	---------------------------------------------------------------------------------------------------------
-
-	-- Clock in a control word write to wfA offset
+	-- Clock in a control word write to controls
 
 	testbenchState <= CSR_WRITE;
 
@@ -509,7 +468,7 @@ begin
 	myFrameHeader.command.rw := '0';
 	myFrameHeader.command.cmd := x"9";
 	myFrameHeader.command.cnt := std_logic_vector( to_unsigned(1, 16));
-	myFrameHeader.addr := x"44A00014";
+	myFrameHeader.addr := x"44A00008";
 	testData1(0) := x"AB"; 	testData1(1) := x"CD"; 	testData1(2) := x"EF"; 	testData1(3) := x"FE";
 	myIPHeader.totalLength := 20+8+14+10+testData1'length;
 	myUDPHeader.totalLength := 8+14+10+testData1'length;
@@ -518,133 +477,27 @@ begin
 
 	--Check the data showed up on the register
 	wait until rising_edge(MAC_TX_EOP_trimac);
-	assert wfa_offset = x"ABCDEFFE" report "CSR control write failed.";
+	assert controls = x"ABCDEFFE" report "CSR control write failed.";
 
 	-------------------------------------------------------------------------------------------------
 
-	-- Ask for the cache status
+	-- Ask for the dummy status
 
 	testbenchState <= CSR_READ;
 
 	--Fix-up headers
 	myFrameHeader.command.rw := '1';
 	myFrameHeader.command.cnt := std_logic_vector( to_unsigned(1, 16));
-	myFrameHeader.addr := x"44A0000C";
+	myFrameHeader.addr := x"44A00004";
 	myIPHeader.totalLength := 20+8+14+10;
 	myUDPHeader.totalLength := 8+14+10;
 
-	cache_status <= x"BADDBAAD";
 	write_complete_frame(emptyPayload);
 
 	--Check the data is returned correctly
-	check_read_data((x"BA", x"DD", x"BA", x"AD"));
-
-	--------------------------------------------------------------------------------------------------
-
-	-- Clock in a multi-word UDP write
-
-	testbenchState <= MULTI_WORD_WRITE;
-
-	myFrameHeader.command.rw := '0';
-	myFrameHeader.command.cnt := std_logic_vector( to_unsigned(256/4, 16));
-	myFrameHeader.addr := x"20" & std_logic_vector(to_unsigned(0, 24)); 
-	for ct in 0 to 255 loop
-		testData2(ct) := std_logic_vector( to_unsigned(ct, 8));
-	end loop;
-
-	myIPHeader.totalLength := 20+8+14+10+testData2'length;
-	myUDPHeader.totalLength := 8+14+10+testData2'length;
-
-	write_complete_frame(testData2);
-
-	--APSMsgProc will send back ACK
-	--TODO: error checking
-	wait until rising_edge(MAC_TX_EOP_trimac);
-
-	---------------------------------------------------------------------------------------------------------
-
-	-- Clock in multi-word read request
-	testbenchState <= MULTI_WORD_READ;
-
-	myFrameHeader.command.rw := '1';
-	myIPHeader.totalLength := 20+8+14+10;
-	myUDPHeader.totalLength := 8+14+10;
-
-	write_complete_frame(emptyPayload);
-
-	--Check the data came back correctly
-	check_read_data(testData2);
-
-	---------------------------------------------------------------------------------------------------------
-
-	-- Clock in a write request with a bad FCS flag going high to make sure is is filtered
-	testbenchState <= BAD_FRAME_TEST;
-
-	myFrameHeader.command.rw := '0';
-	myFrameHeader.command.cmd := x"9";
-	myFrameHeader.command.cnt := std_logic_vector( to_unsigned(1, 16));
-
-	myIPHeader.totalLength := 20+8+14+10+testData1'length;
-	myUDPHeader.totalLength := 8+14+10+testData1'length;
-
-	write_complete_frame(testData1, badFCS => true);
-
-	---------------------------------------------------------------------------------------------------------
-
-	-- Clock in a UDP status request to check the packet counts
-
-	testbenchState <= STATUS_REQUEST;
-
-	myFrameHeader.command.rw := '1';
-	myFrameHeader.command.cmd := x"7";
-	myFrameHeader.addr := (others => '0');
-	myIPHeader.totalLength := 20+8+14+10;
-	myUDPHeader.totalLength := 8+14+10;
-
-	write_complete_frame(emptyPayload);
-
-	--APSMsgProc will send back status registers
-	--TODO: error checking
-	update_status_registers;
-
-	-------------------------------------------------------------------------------------------------
-
-	--Send a sequence of packets and make sure a missed packet causes a halt
-
-	testbenchState <= SEQUENCE_NUMBERING;
-
-	myFrameHeader.command.rw := '0';
-	myFrameHeader.command.cmd := x"9";
-	myFrameHeader.command.cnt := std_logic_vector( to_unsigned(256/4, 16));
-	myFrameHeader.addr := x"20" & std_logic_vector(to_unsigned(0, 24)); 
-	myIPHeader.totalLength := 20+8+14+10+testData2'length;
-	myUDPHeader.totalLength := 8+14+10+testData2'length;
-
-	write_complete_frame(testData2);
-
-	--APSMsgProc will send back ACK
-	--TODO: error checking
-	wait until rising_edge(MAC_TX_EOP_trimac);
-
-	write_complete_frame(testData2, seqNum => 1);
-
-	--APSMsgProc will send back ACK
-	--TODO: error checking
-	wait until rising_edge(MAC_TX_EOP_trimac);
-
-	write_complete_frame(testData2, seqNum => 3);
-
-	--No ack from this but setting sequence number back to zero should
-
-	wait until rising_edge(MAC_CLK);
-	MAC_RX_VALID_trimac <= '1';
-	write_complete_frame(testData2, seqNum => 0);
-
-	--APSMsgProc will send back ACK
-	--TODO: error checking
-	wait until rising_edge(MAC_TX_EOP_trimac);
-
-
+	report "Checking read data for CSR read test.";
+	check_read_data((x"12", x"34", x"56", x"78"));
+	
 	testbenchState <= FINISHED;
 	wait;
 
@@ -655,7 +508,7 @@ end process;
 --Instantiate UDP interface
 udp: entity work.UDP_Interface
     port map (
-		MAC_CLK => MAC_CLK,
+    	MAC_CLK => MAC_CLK,
 		RST => RESET,
 		--real MAC signals to/from the TRIMAC
 		MAC_RXD_trimac => MAC_RXD_trimac,
@@ -703,7 +556,7 @@ port map
 	-- User Logic Connections
 	USER_CLK       => USER_CLK,
 	USER_RST       => USER_RST,
-	USER_VERSION   => USER_VERSION,
+	USER_VERSION   => x"12345678",
 	USER_STATUS    => USER_STATUS,
 	                                
 	USER_DIF       => USER_DIF,
@@ -725,7 +578,7 @@ port map
 	USER_COF_WR    => USER_COF_WR,
 
 	-- Interface to Config CPLD
-	CFG_CLK       => USER_CLK,
+	CFG_CLK       => CFG_CLK,
 	CFGD_IN       => x"AAAA",  -- Temporary for Status command testing
 	CFGD_OUT      => open ,    -- Eventually connected to CPLD
 	CFGD_OE       => open ,    -- Eventually connected to CPLD
@@ -737,15 +590,13 @@ port map
 );
 
 -- Instantiate the APSMsgProc - AXI bridge
-AXIbridge : entity work.APSUserLogic
+AXIbridge : entity work.AXIBridge
 port map ( 
     RST => RESET,
 
 	-- User Logic Connections
 	USER_CLK  => USER_CLK,                        -- Clock for User side of FIFO interface
 	USER_RST => USER_RST,
-	USER_VERSION => USER_VERSION,-- User Logic Firmware Version.  Returned in Status message
-	USER_STATUS => USER_STATUS,  -- User Status Word.  Returned in Status message
 
 	USER_DIF => USER_DIF,  -- User Data Input FIFO output
 	USER_DIF_RD => USER_DIF_RD,  -- User Data Onput FIFO Read Enable
@@ -765,180 +616,135 @@ port map (
 	USER_COF_AFULL => USER_COF_AFULL,  -- User Control Output FIFO Almost Full
 	USER_COF_WR    => USER_COF_WR,     -- User Control Onput FIFO Write Enable
 
-	MM2S_STS_tdata => ETHERNET_MM2S_STS_tdata, 
-	MM2S_STS_tkeep => ETHERNET_MM2S_STS_tkeep,
-	MM2S_STS_tlast => ETHERNET_MM2S_STS_tlast,
-	MM2S_STS_tready => ETHERNET_MM2S_STS_tready,
-	MM2S_STS_tvalid => ETHERNET_MM2S_STS_tvalid,
+	MM2S_STS_tdata => ethernet_mm2s_sts_tdata, 
+	MM2S_STS_tkeep => ethernet_mm2s_sts_tkeep,
+	MM2S_STS_tlast => ethernet_mm2s_sts_tlast,
+	MM2S_STS_tready => ethernet_mm2s_sts_tready,
+	MM2S_STS_tvalid => ethernet_mm2s_sts_tvalid,
 
-	MM2S_tdata => ETHERNET_MM2S_tdata,
-	MM2S_tkeep => ETHERNET_MM2S_tkeep,
-	MM2S_tlast => ETHERNET_MM2S_tlast, 
-	MM2S_tready => ETHERNET_MM2S_tready, 
-	MM2S_tvalid => ETHERNET_MM2S_tvalid,
+	MM2S_tdata => ethernet_mm2s_tdata,
+	MM2S_tkeep => ethernet_mm2s_tkeep,
+	MM2S_tlast => ethernet_mm2s_tlast, 
+	MM2S_tready => ethernet_mm2s_tready, 
+	MM2S_tvalid => ethernet_mm2s_tvalid,
 
-	S2MM_STS_tdata => ETHERNET_S2MM_STS_tdata, 
-	S2MM_STS_tkeep => ETHERNET_S2MM_STS_tkeep, 
-	S2MM_STS_tlast => ETHERNET_S2MM_STS_tlast, 
-	S2MM_STS_tready => ETHERNET_S2MM_STS_tready, 
-	S2MM_STS_tvalid => ETHERNET_S2MM_STS_tvalid, 
+	S2MM_STS_tdata => ethernet_s2mm_sts_tdata, 
+	S2MM_STS_tkeep => ethernet_s2mm_sts_tkeep, 
+	S2MM_STS_tlast => ethernet_s2mm_sts_tlast, 
+	S2MM_STS_tready => ethernet_s2mm_sts_tready, 
+	S2MM_STS_tvalid => ethernet_s2mm_sts_tvalid, 
 
-	MM2S_CMD_tdata => ETHERNET_MM2S_CMD_tdata,
-	MM2S_CMD_tready => ETHERNET_MM2S_CMD_tready,
-	MM2S_CMD_tvalid => ETHERNET_MM2S_CMD_tvalid,
+	MM2S_CMD_tdata => ethernet_mm2s_cmd_tdata,
+	MM2S_CMD_tready => ethernet_mm2s_cmd_tready,
+	MM2S_CMD_tvalid => ethernet_mm2s_cmd_tvalid,
 
-	S2MM_CMD_tdata => ETHERNET_S2MM_CMD_tdata,
-	S2MM_CMD_tready => ETHERNET_S2MM_CMD_tready,
-	S2MM_CMD_tvalid => ETHERNET_S2MM_CMD_tvalid,
+	S2MM_CMD_tdata => ethernet_s2mm_cmd_tdata,
+	S2MM_CMD_tready => ethernet_s2mm_cmd_tready,
+	S2MM_CMD_tvalid => ethernet_s2mm_cmd_tvalid,
 
-	S2MM_tdata => ETHERNET_S2MM_tdata,
-	S2MM_tkeep => ETHERNET_S2MM_tkeep,
-	S2MM_tlast => ETHERNET_S2MM_tlast,
-	S2MM_tready => ETHERNET_S2MM_tready,
-	S2MM_tvalid => ETHERNET_S2MM_tvalid);
+	S2MM_tdata => ethernet_s2mm_tdata,
+	S2MM_tkeep => ethernet_s2mm_tkeep,
+	S2MM_tlast => ethernet_s2mm_tlast,
+	S2MM_tready => ethernet_s2mm_tready,
+	S2MM_tvalid => ethernet_s2mm_tvalid);
 
 
---Instantiate the memory BD
-    myMemory: entity work.Memory_bram
-    port map (
-        AXICLK => USER_CLK,
-        sys_clk => SYS_CLK,
-        AXIRESETN => not RESET,
+	--Instantiate the memory BD
+    myMemory : Memory
+	port map (
 
-        ------------------------------------------------------------------
-        --DMA DataMover
-        DMA_MM2S_STS_tdata => open,
-        DMA_MM2S_STS_tkeep => open,
-        DMA_MM2S_STS_tlast => open,
-        DMA_MM2S_STS_tready => '0',
-        DMA_MM2S_STS_tvalid => open,
-        DMA_S2MM_STS_tdata => open,
-        DMA_S2MM_STS_tkeep => open,
-        DMA_S2MM_STS_tlast => open,
-        DMA_S2MM_STS_tready => '0',
-        DMA_S2MM_STS_tvalid => open,
-        DMA_MM2S_CMD_tdata => (others => '0'),
-        DMA_MM2S_CMD_tready => open,
-        DMA_MM2S_CMD_tvalid => '0',
-        DMA_S2MM_CMD_tdata => (others => '0'),
-        DMA_S2MM_CMD_tready => open,
-        DMA_S2MM_CMD_tvalid => '0',
+	    reset => RESET,
+	    clk_axi => USER_CLK,
+	    clk_axi_locked => "not"(RESET),
+	    AXI_resetn(0) => AXI_resetn,
 
-        ------------------------------------------------------------------
-        --Ethernet DMA
-        ETHERNET_MM2S_tdata  => ETHERNET_MM2S_tdata,
-        ETHERNET_MM2S_tkeep  => ETHERNET_MM2S_tkeep,
-        ETHERNET_MM2S_tlast  => ETHERNET_MM2S_tlast,
-        ETHERNET_MM2S_tready => ETHERNET_MM2S_tready,
-        ETHERNET_MM2S_tvalid => ETHERNET_MM2S_tvalid,
-        ETHERNET_S2MM_tdata  => ETHERNET_S2MM_tdata,
-        ETHERNET_S2MM_tkeep  => ETHERNET_S2MM_tkeep,
-        ETHERNET_S2MM_tlast  => ETHERNET_S2MM_tlast,
-        ETHERNET_S2MM_tvalid  => ETHERNET_S2MM_tvalid,
-        ETHERNET_S2MM_tready => ETHERNET_S2MM_tready,      
-        ETHERNET_MM2S_STS_tdata => ETHERNET_MM2S_STS_tdata,
-        ETHERNET_MM2S_STS_tkeep => ETHERNET_MM2S_STS_tkeep,
-        ETHERNET_MM2S_STS_tlast => ETHERNET_MM2S_STS_tlast,
-        ETHERNET_MM2S_STS_tready => ETHERNET_MM2S_STS_tready,
-        ETHERNET_MM2S_STS_tvalid => ETHERNET_MM2S_STS_tvalid,
-        ETHERNET_S2MM_STS_tdata => ETHERNET_S2MM_STS_tdata,
-        ETHERNET_S2MM_STS_tkeep => ETHERNET_S2MM_STS_tkeep,
-        ETHERNET_S2MM_STS_tlast => ETHERNET_S2MM_STS_tlast,
-        ETHERNET_S2MM_STS_tready => ETHERNET_S2MM_STS_tready,
-        ETHERNET_S2MM_STS_tvalid => ETHERNET_S2MM_STS_tvalid,
-        ETHERNET_MM2S_CMD_tdata => ETHERNET_MM2S_CMD_tdata,
-        ETHERNET_MM2S_CMD_tready => ETHERNET_MM2S_CMD_tready,
-        ETHERNET_MM2S_CMD_tvalid => ETHERNET_MM2S_CMD_tvalid,
-        ETHERNET_S2MM_CMD_tdata => ETHERNET_S2MM_CMD_tdata,
-        ETHERNET_S2MM_CMD_tready => ETHERNET_S2MM_CMD_tready,
-        ETHERNET_S2MM_CMD_tvalid => ETHERNET_S2MM_CMD_tvalid,
+		------------------------------------------------------------------
+		-- CSR AXI
+		CSR_araddr => CSR_araddr, 
+		CSR_arprot => CSR_arprot, 
+		CSR_arready => CSR_arready, 
+		CSR_arvalid => CSR_arvalid, 
+		CSR_awaddr => CSR_awaddr, 
+		CSR_awprot => CSR_awprot, 
+		CSR_awready => CSR_awready, 
+		CSR_awvalid => CSR_awvalid, 
+		CSR_bready => CSR_bready, 
+		CSR_bresp => CSR_bresp, 
+		CSR_bvalid => CSR_bvalid, 
+		CSR_rdata => CSR_rdata, 
+		CSR_rready => CSR_rready, 
+		CSR_rresp => CSR_rresp, 
+		CSR_rvalid => CSR_rvalid, 
+		CSR_wdata => CSR_wdata, 
+		CSR_wready => CSR_wready, 
+		CSR_wstrb => CSR_wstrb, 
+		CSR_wvalid => CSR_wvalid, 
 
-        ------------------------------------------------------------------
 
-        WF_A_addr => wfA_addr,
-        WF_A_clk => wfA_clk,
-        WF_A_din => wfA_din,
-        WF_A_dout => wfA_dout,
-        WF_A_en => wfA_en,
-        WF_A_rst => wfA_rst,
-        WF_A_we => wfA_we,
-        WF_B_addr => wfB_addr,
-        WF_B_clk => wfB_clk,
-        WF_B_din => wfB_din,
-        WF_B_dout => wfB_dout,
-        WF_B_en => wfB_en,
-        WF_B_rst => wfB_rst,
-        WF_B_we => wfB_we,
+		------------------------------------------------------------------
+		--Ethernet DMA
+		ethernet_mm2s_tdata  => ethernet_mm2s_tdata,
+		ethernet_mm2s_tkeep  => ethernet_mm2s_tkeep,
+		ethernet_mm2s_tlast  => ethernet_mm2s_tlast,
+		ethernet_mm2s_tready => ethernet_mm2s_tready,
+		ethernet_mm2s_tvalid => ethernet_mm2s_tvalid,
+		ethernet_s2mm_tdata  => ethernet_s2mm_tdata,
+		ethernet_s2mm_tkeep  => ethernet_s2mm_tkeep,
+		ethernet_s2mm_tlast  => ethernet_s2mm_tlast,
+		ethernet_s2mm_tvalid  => ethernet_s2mm_tvalid,
+		ethernet_s2mm_tready => ethernet_s2mm_tready,
+		ethernet_mm2s_sts_tdata => ethernet_mm2s_sts_tdata,
+		ethernet_mm2s_sts_tkeep => ethernet_mm2s_sts_tkeep,
+		ethernet_mm2s_sts_tlast => ethernet_mm2s_sts_tlast,
+		ethernet_mm2s_sts_tready => ethernet_mm2s_sts_tready,
+		ethernet_mm2s_sts_tvalid => ethernet_mm2s_sts_tvalid,
+		ethernet_s2mm_sts_tdata => ethernet_s2mm_sts_tdata,
+		ethernet_s2mm_sts_tkeep => ethernet_s2mm_sts_tkeep,
+		ethernet_s2mm_sts_tlast => ethernet_s2mm_sts_tlast,
+		ethernet_s2mm_sts_tready => ethernet_s2mm_sts_tready,
+		ethernet_s2mm_sts_tvalid => ethernet_s2mm_sts_tvalid,
+		ethernet_mm2s_cmd_tdata => ethernet_mm2s_cmd_tdata,
+		ethernet_mm2s_cmd_tready => ethernet_mm2s_cmd_tready,
+		ethernet_mm2s_cmd_tvalid => ethernet_mm2s_cmd_tvalid,
+		ethernet_s2mm_cmd_tdata => ethernet_s2mm_cmd_tdata,
+		ethernet_s2mm_cmd_tready => ethernet_s2mm_cmd_tready,
+		ethernet_s2mm_cmd_tvalid => ethernet_s2mm_cmd_tvalid,
+		ethernet_s2mm_err => ethernet_s2mm_err,
+		ethernet_mm2s_err => ethernet_mm2s_err
+	);
 
-        SEQ_addr => SEQ_addr,
-        SEQ_clk  => SEQ_clk,
-        SEQ_din  => SEQ_din,
-        SEQ_dout => SEQ_dout,
-        SEQ_en   => SEQ_en,
-        SEQ_rst  => SEQ_rst,
-        SEQ_we   => SEQ_we,
-        ------------------------------------------------------------------
-        cache_status => cache_status,
-        cache_control => cache_control,
-        wfa_offset => wfa_offset,
-        wfb_offset => wfb_offset,
-        seq_offset => seq_offset,
-        sequencer_control => sequencer_control,
-        ------------------------------------------------------------------
-        pll_status => (others => '0'),
-        phase_a_count => (others => '0'),
-        phase_b_count => (others => '0'),
-        zero_out => open,
-        trigger_word => open ,
-        trigger_interval => open
-    );
+  	-- CSR
+	CSR : entity work.APS2_CSR
+	port map (
+
+		sys_clk => USER_CLK,
+
+		resets => resets,
+		controls => controls,
+		dummyStatus => x"12345678",
+		dummyStatus2 => x"87654321",
+
+		S_AXI_ACLK => USER_CLK,
+		S_AXI_ARESETN => AXI_resetn,
+		S_AXI_AWADDR => CSR_awaddr(7 downto 0),
+		S_AXI_AWPROT => CSR_awprot,
+		S_AXI_AWVALID => CSR_awvalid,
+		S_AXI_AWREADY => CSR_awready,
+		S_AXI_WDATA => CSR_wdata,
+		S_AXI_WSTRB => CSR_wstrb,
+		S_AXI_WVALID => CSR_wvalid,
+		S_AXI_WREADY => CSR_wready,
+		S_AXI_BRESP => CSR_bresp,
+		S_AXI_BVALID => CSR_bvalid,
+		S_AXI_BREADY => CSR_bready,
+		S_AXI_ARADDR => CSR_araddr(7 downto 0),
+		S_AXI_ARPROT => CSR_arprot,
+		S_AXI_ARVALID => CSR_arvalid,
+		S_AXI_ARREADY => CSR_arready,
+		S_AXI_RDATA => CSR_rdata,
+		S_AXI_RRESP => CSR_rresp,
+		S_AXI_RVALID  => CSR_rvalid,
+		S_AXI_RREADY  => CSR_rready
+  );
     
-    WFA: entity work.WF_BRAM
-    port map (
-        clka => wfA_clk,
-        rsta => wfA_rst,
-        ena => wfA_en,
-        wea => wfA_we,
-        addra => wfA_addr(14 downto 4),
-        dina => wfA_din,
-        douta => wfA_dout,
-        clkb => SYS_CLK,
-        web => (others => '0'),
-        addrb => WFA_addrb,
-        dinb => (others => '0'),
-        doutb => WFA_doutb
-    );
-
-    WFB: entity work.WF_BRAM
-    port map (
-        clka => wfB_clk,
-        rsta => wfB_rst,
-        ena => wfB_en,
-        wea => wfB_we,
-        addra => wfB_addr(14 downto 4),
-        dina => wfB_din,
-        douta => wfB_dout,
-        clkb => SYS_CLK,
-        web => (others => '0'),
-        addrb => WFB_addrb,
-        dinb  => (others => '0'),
-        doutb => WFB_doutb
-    );
-
-    SEQ: entity work.SEQ_BRAM
-    port map (
-        clka  => SEQ_clk,
-        rsta  => SEQ_rst,
-        ena   => SEQ_en,
-        wea   => SEQ_we,
-        addra => SEQ_addr(14 downto 4),
-        dina  => SEQ_din,
-        douta => SEQ_dout,
-        clkb  => SYS_CLK,
-        web   => (others => '0'),
-        addrb => SEQ_addrb,
-        dinb  => (others => '0'),
-        doutb => SEQ_doutb
-    );
-
 end Behavioral;

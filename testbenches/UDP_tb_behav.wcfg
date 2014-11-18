@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="UDP_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="UDP_tb" />
+            <top_module name="arp_types" />
+            <top_module name="atmconstants" />
+            <top_module name="axi" />
+            <top_module name="ethernetframe" />
+            <top_module name="family_support" />
+            <top_module name="glbl" />
+            <top_module name="ipv4_types" />
+            <top_module name="ipv4header" />
+            <top_module name="proc_common_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="10" />
+   <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/testbenchState">
+      <obj_property name="ElementShortName">testbenchState</obj_property>
+      <obj_property name="ObjectShortName">testbenchState</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group231">
+      <obj_property name="label">Constants</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/SIM_SEQ_FILE">
+         <obj_property name="ElementShortName">SIM_SEQ_FILE[1:0]</obj_property>
+         <obj_property name="ObjectShortName">SIM_SEQ_FILE[1:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/APS_REPO_PATH">
+         <obj_property name="ElementShortName">APS_REPO_PATH[1:42]</obj_property>
+         <obj_property name="ObjectShortName">APS_REPO_PATH[1:42]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/USER_CLK_PERIOD">
+         <obj_property name="ElementShortName">USER_CLK_PERIOD</obj_property>
+         <obj_property name="ObjectShortName">USER_CLK_PERIOD</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/MAC_CLK_PERIOD">
+         <obj_property name="ElementShortName">MAC_CLK_PERIOD</obj_property>
+         <obj_property name="ObjectShortName">MAC_CLK_PERIOD</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/SYS_CLK_PERIOD">
+         <obj_property name="ElementShortName">SYS_CLK_PERIOD</obj_property>
+         <obj_property name="ObjectShortName">SYS_CLK_PERIOD</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/CFG_CLK_PERIOD">
+         <obj_property name="ElementShortName">CFG_CLK_PERIOD</obj_property>
+         <obj_property name="ObjectShortName">CFG_CLK_PERIOD</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group226">
+      <obj_property name="label">Clocks and Resets</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/AXI_resetn">
+         <obj_property name="ElementShortName">AXI_resetn</obj_property>
+         <obj_property name="ObjectShortName">AXI_resetn</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/SYS_CLK">
+         <obj_property name="ElementShortName">SYS_CLK</obj_property>
+         <obj_property name="ObjectShortName">SYS_CLK</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_CLK">
+         <obj_property name="ElementShortName">USER_CLK</obj_property>
+         <obj_property name="ObjectShortName">USER_CLK</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CFG_CLK">
+         <obj_property name="ElementShortName">CFG_CLK</obj_property>
+         <obj_property name="ObjectShortName">CFG_CLK</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_CLK">
+         <obj_property name="ElementShortName">MAC_CLK</obj_property>
+         <obj_property name="ObjectShortName">MAC_CLK</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_RST">
+         <obj_property name="ElementShortName">USER_RST</obj_property>
+         <obj_property name="ObjectShortName">USER_RST</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/RESET">
+         <obj_property name="ElementShortName">RESET</obj_property>
+         <obj_property name="ObjectShortName">RESET</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group225">
+      <obj_property name="label">MAC</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/MAC_RXD_trimac">
+         <obj_property name="ElementShortName">MAC_RXD_trimac[7:0]</obj_property>
+         <obj_property name="ObjectShortName">MAC_RXD_trimac[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_RX_VALID_trimac">
+         <obj_property name="ElementShortName">MAC_RX_VALID_trimac</obj_property>
+         <obj_property name="ObjectShortName">MAC_RX_VALID_trimac</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_RX_EOP_trimac">
+         <obj_property name="ElementShortName">MAC_RX_EOP_trimac</obj_property>
+         <obj_property name="ObjectShortName">MAC_RX_EOP_trimac</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_BAD_FCS_trimac">
+         <obj_property name="ElementShortName">MAC_BAD_FCS_trimac</obj_property>
+         <obj_property name="ObjectShortName">MAC_BAD_FCS_trimac</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/MAC_TXD_trimac">
+         <obj_property name="ElementShortName">MAC_TXD_trimac[7:0]</obj_property>
+         <obj_property name="ObjectShortName">MAC_TXD_trimac[7:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_TX_RDY_trimac">
+         <obj_property name="ElementShortName">MAC_TX_RDY_trimac</obj_property>
+         <obj_property name="ObjectShortName">MAC_TX_RDY_trimac</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_TX_VALID_trimac">
+         <obj_property name="ElementShortName">MAC_TX_VALID_trimac</obj_property>
+         <obj_property name="ObjectShortName">MAC_TX_VALID_trimac</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_TX_EOP_trimac">
+         <obj_property name="ElementShortName">MAC_TX_EOP_trimac</obj_property>
+         <obj_property name="ObjectShortName">MAC_TX_EOP_trimac</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/MAC_RXD_msgproc">
+         <obj_property name="ElementShortName">MAC_RXD_msgproc[7:0]</obj_property>
+         <obj_property name="ObjectShortName">MAC_RXD_msgproc[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_RX_VALID_msgproc">
+         <obj_property name="ElementShortName">MAC_RX_VALID_msgproc</obj_property>
+         <obj_property name="ObjectShortName">MAC_RX_VALID_msgproc</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_RX_EOP_msgproc">
+         <obj_property name="ElementShortName">MAC_RX_EOP_msgproc</obj_property>
+         <obj_property name="ObjectShortName">MAC_RX_EOP_msgproc</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_BAD_FCS_msgproc">
+         <obj_property name="ElementShortName">MAC_BAD_FCS_msgproc</obj_property>
+         <obj_property name="ObjectShortName">MAC_BAD_FCS_msgproc</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/MAC_TXD_msgproc">
+         <obj_property name="ElementShortName">MAC_TXD_msgproc[7:0]</obj_property>
+         <obj_property name="ObjectShortName">MAC_TXD_msgproc[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_TX_RDY_msgproc">
+         <obj_property name="ElementShortName">MAC_TX_RDY_msgproc</obj_property>
+         <obj_property name="ObjectShortName">MAC_TX_RDY_msgproc</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_TX_VALID_msgproc">
+         <obj_property name="ElementShortName">MAC_TX_VALID_msgproc</obj_property>
+         <obj_property name="ObjectShortName">MAC_TX_VALID_msgproc</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/MAC_TX_EOP_msgproc">
+         <obj_property name="ElementShortName">MAC_TX_EOP_msgproc</obj_property>
+         <obj_property name="ObjectShortName">MAC_TX_EOP_msgproc</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group227">
+      <obj_property name="label">ApsMsgProc</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/BadToggle">
+         <obj_property name="ElementShortName">BadToggle</obj_property>
+         <obj_property name="ObjectShortName">BadToggle</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/GoodToggle">
+         <obj_property name="ElementShortName">GoodToggle</obj_property>
+         <obj_property name="ObjectShortName">GoodToggle</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_STATUS">
+         <obj_property name="ElementShortName">USER_STATUS[31:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_STATUS[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_DIF">
+         <obj_property name="ElementShortName">USER_DIF[31:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_DIF[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_DIF_RD">
+         <obj_property name="ElementShortName">USER_DIF_RD</obj_property>
+         <obj_property name="ObjectShortName">USER_DIF_RD</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_CIF_EMPTY">
+         <obj_property name="ElementShortName">USER_CIF_EMPTY</obj_property>
+         <obj_property name="ObjectShortName">USER_CIF_EMPTY</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_CIF_RD">
+         <obj_property name="ElementShortName">USER_CIF_RD</obj_property>
+         <obj_property name="ObjectShortName">USER_CIF_RD</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_CIF_RW">
+         <obj_property name="ElementShortName">USER_CIF_RW</obj_property>
+         <obj_property name="ObjectShortName">USER_CIF_RW</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_CIF_MODE">
+         <obj_property name="ElementShortName">USER_CIF_MODE[7:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_CIF_MODE[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_CIF_CNT">
+         <obj_property name="ElementShortName">USER_CIF_CNT[15:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_CIF_CNT[15:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_CIF_ADDR">
+         <obj_property name="ElementShortName">USER_CIF_ADDR[31:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_CIF_ADDR[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_DOF">
+         <obj_property name="ElementShortName">USER_DOF[31:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_DOF[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_DOF_WR">
+         <obj_property name="ElementShortName">USER_DOF_WR</obj_property>
+         <obj_property name="ObjectShortName">USER_DOF_WR</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_COF_STAT">
+         <obj_property name="ElementShortName">USER_COF_STAT[7:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_COF_STAT[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_COF_CNT">
+         <obj_property name="ElementShortName">USER_COF_CNT[15:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_COF_CNT[15:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_COF_AFULL">
+         <obj_property name="ElementShortName">USER_COF_AFULL</obj_property>
+         <obj_property name="ObjectShortName">USER_COF_AFULL</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/USER_COF_WR">
+         <obj_property name="ElementShortName">USER_COF_WR</obj_property>
+         <obj_property name="ObjectShortName">USER_COF_WR</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group228">
+      <obj_property name="label">CSR_AXI</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_araddr">
+         <obj_property name="ElementShortName">CSR_araddr[31:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_araddr[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_arprot">
+         <obj_property name="ElementShortName">CSR_arprot[2:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_arprot[2:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_arready">
+         <obj_property name="ElementShortName">CSR_arready</obj_property>
+         <obj_property name="ObjectShortName">CSR_arready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_arvalid">
+         <obj_property name="ElementShortName">CSR_arvalid</obj_property>
+         <obj_property name="ObjectShortName">CSR_arvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_awaddr">
+         <obj_property name="ElementShortName">CSR_awaddr[31:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_awaddr[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_awprot">
+         <obj_property name="ElementShortName">CSR_awprot[2:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_awprot[2:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_awready">
+         <obj_property name="ElementShortName">CSR_awready</obj_property>
+         <obj_property name="ObjectShortName">CSR_awready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_awvalid">
+         <obj_property name="ElementShortName">CSR_awvalid</obj_property>
+         <obj_property name="ObjectShortName">CSR_awvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_bready">
+         <obj_property name="ElementShortName">CSR_bready</obj_property>
+         <obj_property name="ObjectShortName">CSR_bready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_bresp">
+         <obj_property name="ElementShortName">CSR_bresp[1:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_bresp[1:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_bvalid">
+         <obj_property name="ElementShortName">CSR_bvalid</obj_property>
+         <obj_property name="ObjectShortName">CSR_bvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_rdata">
+         <obj_property name="ElementShortName">CSR_rdata[31:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_rdata[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_rready">
+         <obj_property name="ElementShortName">CSR_rready</obj_property>
+         <obj_property name="ObjectShortName">CSR_rready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_rresp">
+         <obj_property name="ElementShortName">CSR_rresp[1:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_rresp[1:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_rvalid">
+         <obj_property name="ElementShortName">CSR_rvalid</obj_property>
+         <obj_property name="ObjectShortName">CSR_rvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_wdata">
+         <obj_property name="ElementShortName">CSR_wdata[31:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_wdata[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_wready">
+         <obj_property name="ElementShortName">CSR_wready</obj_property>
+         <obj_property name="ObjectShortName">CSR_wready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CSR_wstrb">
+         <obj_property name="ElementShortName">CSR_wstrb[3:0]</obj_property>
+         <obj_property name="ObjectShortName">CSR_wstrb[3:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/CSR_wvalid">
+         <obj_property name="ElementShortName">CSR_wvalid</obj_property>
+         <obj_property name="ObjectShortName">CSR_wvalid</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group229">
+      <obj_property name="label">Ethernet DMA</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_mm2s_tdata">
+         <obj_property name="ElementShortName">ethernet_mm2s_tdata[31:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_tdata[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_mm2s_tkeep">
+         <obj_property name="ElementShortName">ethernet_mm2s_tkeep[3:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_tkeep[3:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_tlast">
+         <obj_property name="ElementShortName">ethernet_mm2s_tlast</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_tlast</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_tready">
+         <obj_property name="ElementShortName">ethernet_mm2s_tready</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_tready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_tvalid">
+         <obj_property name="ElementShortName">ethernet_mm2s_tvalid</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_tvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_s2mm_tdata">
+         <obj_property name="ElementShortName">ethernet_s2mm_tdata[31:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_tdata[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_s2mm_tkeep">
+         <obj_property name="ElementShortName">ethernet_s2mm_tkeep[3:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_tkeep[3:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_tlast">
+         <obj_property name="ElementShortName">ethernet_s2mm_tlast</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_tlast</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_tvalid">
+         <obj_property name="ElementShortName">ethernet_s2mm_tvalid</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_tvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_tready">
+         <obj_property name="ElementShortName">ethernet_s2mm_tready</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_tready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_s2mm_sts_tdata">
+         <obj_property name="ElementShortName">ethernet_s2mm_sts_tdata[7:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_sts_tdata[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_s2mm_sts_tkeep">
+         <obj_property name="ElementShortName">ethernet_s2mm_sts_tkeep[0:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_sts_tkeep[0:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_sts_tlast">
+         <obj_property name="ElementShortName">ethernet_s2mm_sts_tlast</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_sts_tlast</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_sts_tready">
+         <obj_property name="ElementShortName">ethernet_s2mm_sts_tready</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_sts_tready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_sts_tvalid">
+         <obj_property name="ElementShortName">ethernet_s2mm_sts_tvalid</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_sts_tvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_mm2s_sts_tdata">
+         <obj_property name="ElementShortName">ethernet_mm2s_sts_tdata[7:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_sts_tdata[7:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_mm2s_sts_tkeep">
+         <obj_property name="ElementShortName">ethernet_mm2s_sts_tkeep[0:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_sts_tkeep[0:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_sts_tlast">
+         <obj_property name="ElementShortName">ethernet_mm2s_sts_tlast</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_sts_tlast</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_sts_tready">
+         <obj_property name="ElementShortName">ethernet_mm2s_sts_tready</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_sts_tready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_sts_tvalid">
+         <obj_property name="ElementShortName">ethernet_mm2s_sts_tvalid</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_sts_tvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_s2mm_cmd_tdata">
+         <obj_property name="ElementShortName">ethernet_s2mm_cmd_tdata[71:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_cmd_tdata[71:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_cmd_tready">
+         <obj_property name="ElementShortName">ethernet_s2mm_cmd_tready</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_cmd_tready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_cmd_tvalid">
+         <obj_property name="ElementShortName">ethernet_s2mm_cmd_tvalid</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_cmd_tvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/ethernet_mm2s_cmd_tdata">
+         <obj_property name="ElementShortName">ethernet_mm2s_cmd_tdata[71:0]</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_cmd_tdata[71:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_cmd_tready">
+         <obj_property name="ElementShortName">ethernet_mm2s_cmd_tready</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_cmd_tready</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_cmd_tvalid">
+         <obj_property name="ElementShortName">ethernet_mm2s_cmd_tvalid</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_cmd_tvalid</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_s2mm_err">
+         <obj_property name="ElementShortName">ethernet_s2mm_err</obj_property>
+         <obj_property name="ObjectShortName">ethernet_s2mm_err</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="logic" fp_name="/UDP_tb/ethernet_mm2s_err">
+         <obj_property name="ElementShortName">ethernet_mm2s_err</obj_property>
+         <obj_property name="ObjectShortName">ethernet_mm2s_err</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group230">
+      <obj_property name="label">Status Registers</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/HOST_FIRMWARE_VER">
+         <obj_property name="ElementShortName">HOST_FIRMWARE_VER[31:0]</obj_property>
+         <obj_property name="ObjectShortName">HOST_FIRMWARE_VER[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_FIRMWARE_VER">
+         <obj_property name="ElementShortName">USER_FIRMWARE_VER[31:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_FIRMWARE_VER[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/CONFIG_SOURCE">
+         <obj_property name="ElementShortName">CONFIG_SOURCE[31:0]</obj_property>
+         <obj_property name="ObjectShortName">CONFIG_SOURCE[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/USER_STATUS_RESPONSE">
+         <obj_property name="ElementShortName">USER_STATUS_RESPONSE[31:0]</obj_property>
+         <obj_property name="ObjectShortName">USER_STATUS_RESPONSE[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/DAC0_STATUS">
+         <obj_property name="ElementShortName">DAC0_STATUS[31:0]</obj_property>
+         <obj_property name="ObjectShortName">DAC0_STATUS[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/DAC1_STATUS">
+         <obj_property name="ElementShortName">DAC1_STATUS[31:0]</obj_property>
+         <obj_property name="ObjectShortName">DAC1_STATUS[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/PLL_STATUS">
+         <obj_property name="ElementShortName">PLL_STATUS[31:0]</obj_property>
+         <obj_property name="ObjectShortName">PLL_STATUS[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/FPGA_TEMPERATURE">
+         <obj_property name="ElementShortName">FPGA_TEMPERATURE[31:0]</obj_property>
+         <obj_property name="ObjectShortName">FPGA_TEMPERATURE[31:0]</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/SEND_PKT_COUNT">
+         <obj_property name="ElementShortName">SEND_PKT_COUNT</obj_property>
+         <obj_property name="ObjectShortName">SEND_PKT_COUNT</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/RECV_PKT_COUNT">
+         <obj_property name="ElementShortName">RECV_PKT_COUNT</obj_property>
+         <obj_property name="ObjectShortName">RECV_PKT_COUNT</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/SKIP_PKT_COUNT">
+         <obj_property name="ElementShortName">SKIP_PKT_COUNT</obj_property>
+         <obj_property name="ObjectShortName">SKIP_PKT_COUNT</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/DUP_PKT_COUNT">
+         <obj_property name="ElementShortName">DUP_PKT_COUNT</obj_property>
+         <obj_property name="ObjectShortName">DUP_PKT_COUNT</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/FCS_ERR_COUNT">
+         <obj_property name="ElementShortName">FCS_ERR_COUNT</obj_property>
+         <obj_property name="ObjectShortName">FCS_ERR_COUNT</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/OVERRUN_COUNT">
+         <obj_property name="ElementShortName">OVERRUN_COUNT</obj_property>
+         <obj_property name="ObjectShortName">OVERRUN_COUNT</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/UPTIME_SEC">
+         <obj_property name="ElementShortName">UPTIME_SEC</obj_property>
+         <obj_property name="ObjectShortName">UPTIME_SEC</obj_property>
+      </wvobject>
+      <wvobject db_ref_id="1" type="other" fp_name="/UDP_tb/UPTIME_NSEC">
+         <obj_property name="ElementShortName">UPTIME_NSEC</obj_property>
+         <obj_property name="ObjectShortName">UPTIME_NSEC</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/resets">
+      <obj_property name="ElementShortName">resets[31:0]</obj_property>
+      <obj_property name="ObjectShortName">resets[31:0]</obj_property>
+   </wvobject>
+   <wvobject db_ref_id="1" type="array" fp_name="/UDP_tb/controls">
+      <obj_property name="ElementShortName">controls[31:0]</obj_property>
+      <obj_property name="ObjectShortName">controls[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+</wave_config>
