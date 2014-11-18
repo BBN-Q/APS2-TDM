@@ -36,6 +36,3 @@ update_compile_order -fileset sim_1
 
 # simulation generics
 set_property generic "APS_REPO_PATH=\"$source_dir\"" [get_filesets sim_1]
-
-# use spread logic implementation strategy to overcome overlapping nodes
-set_property strategy Congestion_SpreadLogic_medium [get_runs impl_1]
