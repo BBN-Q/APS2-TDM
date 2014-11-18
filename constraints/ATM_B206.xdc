@@ -285,9 +285,6 @@ set_property PACKAGE_PIN A23 [get_ports {TRGDAT_OUTP[6]}]
 set_property PACKAGE_PIN J25 [get_ports {TRGDAT_OUTP[7]}]
 set_property PACKAGE_PIN AB24 [get_ports {TRGDAT_OUTP[8]}]
 
-set_property PACKAGE_PIN AD25 [get_ports {TRIG_CTRLP[0]}]
-set_property PACKAGE_PIN AE25 [get_ports {TRIG_CTRLP[1]}]
-
 set_property IOSTANDARD LVDS_25 [get_ports {TRGCLK_OUTN[0]}]
 set_property IOSTANDARD LVDS_25 [get_ports {TRGCLK_OUTN[1]}]
 set_property IOSTANDARD LVDS_25 [get_ports {TRGCLK_OUTN[2]}]
@@ -325,7 +322,10 @@ set_property IOSTANDARD LVDS_25 [get_ports {TRGDAT_OUTP[6]}]
 set_property IOSTANDARD LVDS_25 [get_ports {TRGDAT_OUTP[7]}]
 set_property IOSTANDARD LVDS_25 [get_ports {TRGDAT_OUTP[8]}]
 
-# Receive Test Connector
+# Auxiliary SATA
+set_property PACKAGE_PIN AD25 [get_ports {TRIG_CTRLP[0]}]
+set_property PACKAGE_PIN AE25 [get_ports {TRIG_CTRLP[1]}]
+
 set_property IOSTANDARD LVDS_25 [get_ports {TRIG_CTRLN[0]}]
 set_property IOSTANDARD LVDS_25 [get_ports {TRIG_CTRLN[1]}]
 set_property IOSTANDARD LVDS_25 [get_ports {TRIG_CTRLP[0]}]
@@ -336,22 +336,24 @@ set_property DIFF_TERM TRUE [get_ports {TRIG_CTRLN[1]}]
 set_property DIFF_TERM TRUE [get_ports {TRIG_CTRLP[0]}]
 set_property DIFF_TERM TRUE [get_ports {TRIG_CTRLP[1]}]
 
-# Trigger Test Input
+#create_pblock pblock_TIL1
+#add_cells_to_pblock [get_pblocks pblock_TIL1] [get_cells -quiet [list TIL1]]
+#resize_pblock [get_pblocks pblock_TIL1] -add {CLOCKREGION_X0Y0:CLOCKREGION_X0Y0}
+
+# Must LOC IDELAYCTRL for Auxiliary trigger input to avoid mapping errors
+# LOC required if there is more than one IDELAYCTRL in the design
+# set_property LOC IDELAYCTRL_X1Y2 [get_cells TIL1/IDC1]
+
+# Extra SMA I/O pins
 #set_property PACKAGE_PIN AF4  [get_ports {TRIGIO_A[0]}]
 #set_property PACKAGE_PIN AF5  [get_ports {TRIGIO_A[1]}]
 #set_property PACKAGE_PIN AF19 [get_ports {TRIGIO_B[0]}]
 #set_property PACKAGE_PIN AF20 [get_ports {TRIGIO_B[1]}]
 
-# Must LOC IDELAYCTRL for Trigger input to avoid mapping errors
-# LOC required if there is more than one IDELAYCTRL in the design
-# set_property LOC IDELAYCTRL_X1Y2 [get_cells TIL1/IDC1]
-
-# Extra SMA I/O pins
 #set_property IOSTANDARD LVCMOS25 [get_ports {TRIGIO_A[0]}]
 #set_property IOSTANDARD LVCMOS25 [get_ports {TRIGIO_A[1]}]
 #set_property IOSTANDARD LVCMOS25 [get_ports {TRIGIO_B[0]}]
 #set_property IOSTANDARD LVCMOS25 [get_ports {TRIGIO_B[1]}]
-
 
 #***********************************************************
 # The following constraints target the Transceiver Physical*
