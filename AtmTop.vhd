@@ -25,6 +25,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_misc.or_reduce;
 
 use work.AtmIPCores.all;
 use work.ATMConstants.all;
@@ -142,20 +143,14 @@ signal TrigOutFull    : std_logic_vector(8 downto 0);
 
 signal TrigInDat      : std_logic_vector(7 downto 0);
 signal TrigInChk      : std_logic_vector(7 downto 0);
-signal TrigErrToggle  : std_logic;
 signal TrigClkErr     : std_logic;
 signal TrigOvflErr    : std_logic;
-signal TrigLocked     : std_logic;
+signal TrigLocked     : std_logic := '1';
 signal TrigInReady    : std_logic;
 signal TrigInRd       : std_logic;
 signal TrigFull       : std_logic;
-signal TrigInvert     : std_logic_vector(8 downto 0);
-signal TrigTestEn     : std_logic_vector(8 downto 0);
-signal TrigActive     : std_logic_vector(8 downto 0);
-signal RefCnt         : std_logic_vector(22 downto 0);
 signal ChannelOn      : std_logic;
 signal TrigEn         : std_logic_vector(3 downto 0);
-signal TrigOutEn      : std_logic_vector(13 downto 0);
 
 signal CMP : std_logic_vector(7 downto 0);
 
@@ -237,16 +232,6 @@ begin
 
 	-- Force use of UserInputs
 	SFP_SCL <= '1' when (FPGA_RESETL = '0' and UseInputs = '1') else '0';
-
-	process(REF_FPGA, ChannelOn, GlobalReset)
-	begin
-		if ChannelOn = '1' or GlobalReset = '1' then
-			RefCnt <= (others => '0');
-		elsif rising_edge(REF_FPGA) then
-			RefCnt <= RefCnt + 1;
-		end if;
-	end process;
-
 
 	-- Reset SFP module for at least 100ms when GlobalReset is deasserted
 	process(CLK_100MHZ, GlobalReset)
@@ -333,6 +318,51 @@ begin
 		busy_out      => DrpBusy
 	);
 
+	-- All DGB(x) LEDs are active low
+	-- DBG(0) Matching Ethernet Packet Toggle
+	-- DBG(1) Non-Matching Ethernet Packet Toggle
+	-- DBG(2) Ehernet Link Stauts, lit when link to SFP is active
+	-- DBG(3) Lights during SFP link initialization and when External Trigger input is high
+	-- DBG(4/DBG(5)) GRN = MIG Test Pass, RED = test fail, off = waiting for calibration to complete
+	-- DBG(5) Turns off when MIG Calibration successfully completes
+	-- DBG(6) PLL Lock for DAC Channel 0
+	-- DBG(7) PLL Lock for DAC Channel 1
+	 
+	-- Pass STATUS to Debug LEDs
+	DBG(2 downto 0) <= STATUS(2 downto 0);
+
+	-- Combine Link LED with external Trigger inputs.  Link only active during initial syncing
+	DBG(3) <= '0' when (STATUS(3) = '0'
+	              or (TrigLocked = '1' and LedToggle(25) = '1'))  -- Slow bink if locked w/o errors, off if not locked
+	           else '1';
+
+	-- Black wire = pin 1 = RED cathode.  Red = pin 2 = GRN cathode.
+	-- Assume Black to 6 and Red to 7.  Then 7H/6L = RED, 7L/6H = GRN
+
+	-- Display Trigger test status.  Blink green if locked and running.  Blink red if it is locked and failing.  Off if not locked
+	-- Host can enable individual channels for send to verify front panel connectivity
+	-- Also red when SFP_ENH is low for testing red
+	DBG(6) <= '0' when LedRed = '1' else '1' when (TrigLocked = '1' and LedToggle(25) = '0') else 'Z' when (TrigLocked = '0' or LedToggle(25) = '1') else '0';
+	DBG(7) <= '1' when LedRed = '1' else '0' when (TrigLocked = '1' and LedToggle(25) = '0') else 'Z' when (TrigLocked = '0' or LedToggle(25) = '1') else '1';
+
+	-- Black wire = pin 1 = RED cathode.  Red = pin 2 = GRN cathode.
+	-- Assume Black to 4 and Red to 5.  Then 5H/4L = RED, 5L/4H = GRN
+	-- Display Trigger input status
+	-- Off = No trigger received
+	-- Green blinks indicate which single trigger input is active
+	DBG(4) <= '0' when LedRed = '1' else '1' when ChannelOn = '1' else 'Z';
+	DBG(5) <= '1' when LedRed = '1' else '0' when ChannelOn = '1' else 'Z';
+
+	-- Blink N+1 times when trigger N is high
+	ChannelOn <= '1' when (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00000001" and LedToggle(26 downto 24)  = "000")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00000010" and LedToggle(26 downto 24) <= "001")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00000100" and LedToggle(26 downto 24) <= "010")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00001000" and LedToggle(26 downto 24) <= "011")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00010000" and LedToggle(26 downto 24) <= "100")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00100000" and LedToggle(26 downto 24) <= "101")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "01000000" and LedToggle(26 downto 24) <= "110")
+	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "10000000")
+	             else '0';
 
 	-- Convert CFG Clock to 200 MHz for the delay calibratrion clock and serial data input and 400 MHz for the data output clock
 	CK0 : CCLK_MMCM
@@ -341,7 +371,7 @@ begin
 		CLK_100MHZ_IN  => CFG_CCLK,
 	
 		-- Clock out ports
-		CLK_100MHZ     => CLK_100MHZ ,  -- Replaces previous CFG_CCLK
+		CLK_100MHZ     => CLK_100MHZ,  -- Replaces previous CFG_CCLK
 		CLK_200MHZ     => CLK_200MHZ,
 		CLK_400MHZ     => CLK_400MHZ,
 	
@@ -566,279 +596,134 @@ begin
 		S_AXI_RRESP => CSR_rresp,
 		S_AXI_RVALID  => CSR_rvalid,
 		S_AXI_RREADY  => CSR_rready
-  );
+	);
+
+	CBF1 : for i in 0 to 7 generate
+		-- External trigger input from LVDS comparator.  Must be differentially termianted
+		IBX : IBUFDS
+		generic map
+		(
+			DIFF_TERM => TRUE, -- Differential Termination
+			IBUF_LOW_PWR => FALSE -- Low power (TRUE) vs. performance (FALSE) setting for refernced I/O standards
+		)
+		port map
+		(
+			O  => CMP(i),      -- Drive the LED output
+			I  => TRG_CMPP(i), -- Diff_p buffer input (connect directly to top-level port)
+			IB => TRG_CMPN(i)  -- Diff_n buffer input (connect directly to top-level port)
+		);
+	end generate;
+
+	-- Send output status to LEDs for checking
+	LED(4 downto 0) <= (others => 'Z');
+	LED(7 downto 5) <=      "000" when CMP = "00000001"
+	                   else "001" when CMP = "00000010" 
+	                   else "010" when CMP = "00000100" 
+	                   else "011" when CMP = "00001000" 
+	                   else "100" when CMP = "00010000" 
+	                   else "101" when CMP = "00100000" 
+	                   else "110" when CMP = "01000000" 
+	                   else "111" when CMP = "10000000" 
+	                   else "000";
+
+	LED(8) <=      LedToggle(25) when CMP = "00000001"
+	          else LedToggle(25) when CMP = "00000010" 
+	          else LedToggle(25) when CMP = "00000100" 
+	          else LedToggle(25) when CMP = "00001000" 
+	          else LedToggle(25) when CMP = "00010000" 
+	          else LedToggle(25) when CMP = "00100000" 
+	          else LedToggle(25) when CMP = "01000000" 
+	          else LedToggle(25) when CMP = "10000000" 
+	          else '0';
 
 
+	LED(9) <= TrigClkErr or TrigOvflErr;
 
--- All DGB(x) LEDs are active low
-  -- DBG(0) Matching Ethernet Packet Toggle
-  -- DBG(1) Non-Matching Ethernet Packet Toggle
-  -- DBG(2) Ehernet Link Stauts, lit when link to SFP is active
-  -- DBG(3) Lights during SFP link initialization and when External Trigger input is high
-  -- DBG(4/DBG(5)) GRN = MIG Test Pass, RED = test fail, off = waiting for calibration to complete
-  -- DBG(5) Turns off when MIG Calibration successfully completes
-  -- DBG(6) PLL Lock for DAC Channel 0
-  -- DBG(7) PLL Lock for DAC Channel 1
-   
-  -- Pass GPIO_LED to Debug LEDs
-  DBG(2 downto 0) <= STATUS(2 downto 0);
+	-- basic logic to broadcast input triggers to all output triggers
+	process(CLK_100MHZ, USER_RST)
+	begin
+		if rising_edge(CLK_100MHZ) then
+			TrigOutDat <= (others => '0' & CMP(6 downto 0));
+			if USER_RST = '1' or or_reduce(TrigOutFull) = '1' then
+				TrigWr <= (others => '0');
+			else
+				TrigWr <= (others => CMP(7)); -- use CMP(7) as valid signal
+			end if;
+		end if;
+	end process;
 
-  -- Combine Link LED with external Trigger inputs.  Link only active during initial syncing
-  DBG(3) <= '0' when (STATUS(3) = '0'
-                      or (TrigErrToggle = '1' and LedToggle(23) = '1')  -- Fast blink if locked and failing
-                      or (TrigErrToggle = '0' and TrigLocked = '1' and LedToggle(25) = '1'))  -- Slow bink if locked w/o errors, off if not locked
-                      else '1';
+	-- Advance the FIFO when you have finished sending the current data
+	-- TrigInRd <= TrigInReady;
 
-  -- Black wire = pin 1 = RED cathode.  Red = pin 2 = GRN cathode.
-  -- Assume Black to 6 and Red to 7.  Then 7H/6L = RED, 7L/6H = GRN
+	-- -- Use the extra STA connector as a test input
+	-- TIL1 : entity work.TriggerInLogic
+	-- port map
+	-- (
+	-- 	USER_CLK   => CLK_100MHZ,
+	-- 	CLK_200MHZ => CLK_200MHZ,
+	-- 	RESET      => USER_RST,
+	
+	-- 	TRIG_CLKP  => TRIG_CTRLP(0),
+	-- 	TRIG_CLKN  => TRIG_CTRLN(0),
+	-- 	TRIG_DATP  => TRIG_CTRLP(1),
+	-- 	TRIG_DATN  => TRIG_CTRLN(1),
+	
+	-- 	TRIG_NEXT  => TrigInRd,  -- Always read data when it is available
+		
+	-- 	TRIG_LOCKED => TrigLocked,
+	-- 	TRIG_ERR   => TrigClkErr,
+	-- 	TRIG_RX    => TrigInDat,
+	-- 	TRIG_OVFL  => TrigOvflErr,
+	-- 	TRIG_READY => TrigInReady
+	-- );
 
-  -- Display Trigger test status.  Blink green if locked and running.  Blink red if it is locked and failing.  Off if not locked
-  -- Host can enable individual channels for send to verify front panel connectivity
-  -- Also red when SFP_ENH is low for testing red
-  DBG(6) <= '0' when LedRed = '1' else '1' when TrigLocked = '1' and TrigErrToggle = '0' and LedToggle(25) = '0' else 'Z' when TrigLocked = '0' or LedToggle(25) = '1' else '0';
-  DBG(7) <= '1' when LedRed = '1' else '0' when TrigLocked = '1' and TrigErrToggle = '0' and LedToggle(25) = '0' else 'Z' when TrigLocked = '0' or LedToggle(25) = '1' else '1';
+	-- Modified to allow use of I/O buffer
+	TO1 : for i in 0 to 8 generate
+		-- Externally, cable routing requires a non sequential JTx to TOx routing.
+		-- The cables are routed from the PCB connectors to the front panel as shown below.
+		-- The mapping is performed by changing the pin definitions in the XDC file.
+		--
+		-- TO1 = JT0
+		-- TO2 = JT2
+		-- TO3 = JT4
+		-- TO4 = JT6
+		-- TO5 = JC01
+		-- TO6 = JT3
+		-- TO7 = JT1
+		-- TO8 = JT5
+		-- TO9 = JT7
+		-- TAUX = JT8
+		TOLX : entity work.TriggerOutLogic
+		port map
+		(
+			USER_CLK   => CLK_100MHZ,
+			
+			-- These clocks are usually generated from an MMCM driven by the CFG_CCLK.
+			CLK_100MHZ => CLK_100MHZ,
+			CLK_400MHZ => CLK_400MHZ,
+			RESET      => USER_RST,
+		
+			TRIG_TX    => TrigOutDat(i),
+			TRIG_WR    => TrigWr(i),
+			TRIG_AFULL => TrigOutFull(i),
+		
+			TRIG_CLKP  => TRGCLK_OUTP(i),
+			TRIG_CLKN  => TRGCLK_OUTN(i),
+			TRIG_DATP  => TRGDAT_OUTP(i),
+			TRIG_DATN  => TRGDAT_OUTN(i)
+		);		
+	end generate;
 
-  -- Black wire = pin 1 = RED cathode.  Red = pin 2 = GRN cathode.
-  -- Assume Black to 4 and Red to 5.  Then 5H/4L = RED, 5L/4H = GRN
-  -- Display Trigger input status
-  -- Off = No trigger received
-  -- Green blinks indicate which single trigger input is active
-  DBG(4) <= '0' when LedRed = '1' else '1' when ChannelOn = '1' or RefCnt(22) = '1' else 'Z';
-  DBG(5) <= '1' when LedRed = '1' else '0' when ChannelOn = '1' or RefCnt(22) = '1' else 'Z';
-
-  -- Blink N+1 times when trigger N is high
-  ChannelOn <= '1' when (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00000001" and LedToggle(26 downto 24)  = "000")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00000010" and LedToggle(26 downto 24) <= "001")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00000100" and LedToggle(26 downto 24) <= "010")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00001000" and LedToggle(26 downto 24) <= "011")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00010000" and LedToggle(26 downto 24) <= "100")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "00100000" and LedToggle(26 downto 24) <= "101")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "01000000" and LedToggle(26 downto 24) <= "110")
-                     or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "10000000")
-               else '0';
-
-  -- Enable Trigger Output when jumper installed and enabled by the host software
-  -- TrigOutEn is zero by default and gets set by the host software
-  -- Bit 13 must be set to enable anything, so that it is disabled by default
-
-  -- sync trigger output enables  
-  process(CLK_125MHZ)
-    begin
-      if rising_edge(CLK_125MHZ) then
-        TrigTestEn(0) <= not USER_RST and TrigOutEn(0);
-        TrigTestEn(1) <= not USER_RST and TrigOutEn(1);
-        TrigTestEn(2) <= not USER_RST and TrigOutEn(2);
-        TrigTestEn(3) <= not USER_RST and TrigOutEn(3);
-        TrigTestEn(4) <= not USER_RST and TrigOutEn(4);
-        TrigTestEn(5) <= not USER_RST and TrigOutEn(5);
-        TrigTestEn(6) <= not USER_RST and TrigOutEn(6);
-        TrigTestEn(7) <= not USER_RST and TrigOutEn(7);
-        TrigTestEn(8) <= not USER_RST and TrigOutEn(8);
-        TrigInvert    <= (others => TrigOutEn(13));  -- Invert output trigger sequence when set
-      end if;
-    end process;
-
-  CBF1 : for i in 0 to 7 generate
-    -- External trigger input from LVDS comparator.  Must be differentially termianted
-    IBX : IBUFDS
-    generic map
-    (
-      DIFF_TERM => TRUE, -- Differential Termination
-      IBUF_LOW_PWR => FALSE -- Low power (TRUE) vs. performance (FALSE) setting for refernced I/O standards
-    )
-    port map
-    (
-      O  => CMP(i),        -- Drive the LED output
-      I  => TRG_CMPP(i), -- Diff_p buffer input (connect directly to top-level port)
-      IB => TRG_CMPN(i)  -- Diff_n buffer input (connect directly to top-level port)
-    );
-  end generate;
-
- -- Send output status to LEDs for checking
- LED(4 downto 0) <= (others => 'Z');
- LED(7 downto 5) <=      "000" when CMP = "00000001"
-                    else "001" when CMP = "00000010" 
-                    else "010" when CMP = "00000100" 
-                    else "011" when CMP = "00001000" 
-                    else "100" when CMP = "00010000" 
-                    else "101" when CMP = "00100000" 
-                    else "110" when CMP = "01000000" 
-                    else "111" when CMP = "10000000" 
-                    else "000";
-
-LED(8) <=      LedToggle(25) when CMP = "00000001"
-          else LedToggle(25) when CMP = "00000010" 
-          else LedToggle(25) when CMP = "00000100" 
-          else LedToggle(25) when CMP = "00001000" 
-          else LedToggle(25) when CMP = "00010000" 
-          else LedToggle(25) when CMP = "00100000" 
-          else LedToggle(25) when CMP = "01000000" 
-          else LedToggle(25) when CMP = "10000000" 
-          else '0';
-
-
- LED(9) <= TrigClkErr or TrigOvflErr;
-
-  -- Code to verify the operation of the trigger logic.
-  -- Waits for the receiver to lock onto the clock from the transmitter and then sends an incremental stream of triggers.
-  -- The receiver verifies that it receives incremental triggers.
-  --
-  process(CLK_125MHZ, USER_RST)
-  begin
-    if USER_RST = '1' then
-      TrigInChk <=  x"00";
-      TrigErrToggle <= '0';
-    elsif rising_edge(CLK_125MHZ) then
-
-      -- There are two operating modes.
-      -- If TrigLocked is asserted, it is assumed that it is looping back within the board.
-      -- If TrigLocked is not asserted, it assumes that it is testing external triggers
-
-      if TrigLocked = '0' then
-        -- Reset input verification when not locked
-        TrigInChk <= x"00";
-        TrigErrToggle <= '0';
-      else
-        -- Once you lock onto a looped back stream, verify the incremental data
-        if TrigInReady = '1' then
-          -- Read the receive FIFO until all of the triggers are received
-          -- TrigInReady tied to TRIG_NEXT to advance FIFO when a trigger is available
-
-          if TrigInChk = x"00" then
-            -- Set the check value from the first trigger
-            if TrigInDat = x"FF" then
-              TrigInChk <= x"01";
-            else
-              TrigInChk <= TrigInDat + 1;
-            end if;
-          else
-            -- Advance the check value when you have your first non-zero trigger
-            if TrigInChk /= x"FF" then
-              TrigInChk <= TrigInChk + 1;
-            else
-              TrigInChk <= x"01";
-            end if;
-  
-            if TrigInDat /= TrigInChk then
-              TrigErrToggle <= '1';
-            end if;
-          end if;
-        end if; -- TrigInRdy
-      end if; -- TrigLocked
-    end if; -- rising_edge
-  end process;
-
-  -- Advance the FIFO when you have finished sending the current data
-  TrigInRd <= TrigInReady;
-
-  -- Use the extra STA connector as a test input
-  TIL1 : entity work.TriggerInLogic
-  port map
-  (
-    USER_CLK   => CLK_125MHZ,
-    CLK_200MHZ => CLK_200MHZ,
-    RESET      => USER_RST,
-  
-    TRIG_CLKP  => TRIG_CTRLP(0),
-    TRIG_CLKN  => TRIG_CTRLN(0),
-    TRIG_DATP  => TRIG_CTRLP(1),
-    TRIG_DATN  => TRIG_CTRLN(1),
-  
-    TRIG_NEXT  => TrigInRd,  -- Always read data when it is available
-    
-    TRIG_LOCKED => TrigLocked,
-    TRIG_ERR   => TrigClkErr ,
-    TRIG_RX    => TrigInDat,
-    TRIG_OVFL  => TrigOvflErr ,
-    TRIG_READY => TrigInReady
-  );
-  
-
-  -- Modified to allow use of I/O buffer
-  TO1 : for i in 0 to 8 generate
-    TOLX : entity work.TriggerOutLogic
-    port map
-    (
-      USER_CLK   => CLK_125MHZ,
-      
-      -- These clocks are usually generated from an MMCM driven by the CFG_CCLK.
-      CLK_100MHZ => CLK_100MHZ,
-      CLK_400MHZ => CLK_400MHZ,
-      RESET      => not TrigTestEn(i),
-    
-      TRIG_TX    => TrigOutDat(i),
-      TRIG_WR    => TrigWr(i),
-      TRIG_AFULL => TrigOutFull(i),
-    
-      TRIG_CLKP  => TRGCLK_OUTP(i),
-      TRIG_CLKN  => TRGCLK_OUTN(i),
-      TRIG_DATP  => TRGDAT_OUTP(i),
-      TRIG_DATN  => TRGDAT_OUTN(i)
-    );
-    
-    -- Externally, cable routing requires a non sequential JTx to TOx routing.
-    -- The cables are routed from the PCB connectors to the front panel as shown below.
-    -- The mapping is performed by changing the pin definitions in the XDC file.
-    --
-    -- TO1 = JT0
-    -- TO2 = JT2
-    -- TO3 = JT4
-    -- TO4 = JT6
-    -- TO5 = JC01
-    -- TO6 = JT3
-    -- TO7 = JT1
-    -- TO8 = JT5
-    -- TO9 = JT7
-    -- TAUX = JT8
-    --
-    
-    process(CLK_125MHZ, TrigTestEn(i))
-    begin
-      if TrigTestEn(i) = '0' then
-        TrigWr(i) <= '0';
-        TrigOutDat(i) <= x"00";
-        TrigActive(i) <= '0';
-      elsif rising_edge(CLK_125MHZ) then
-        -- Default deassert FIFO write
-        TrigWr(i) <= '0';
-
-        -- Hold off start to give reset time for FIFO
-        if TrigOutDat(i) = x"80" then
-          TrigActive(i) <= '1';
-        end if;
-        
-        -- There are two operating modes.
-        -- If TrigLocked is asserted, it is assumed that it is looping back within the board.
-        -- If TrigLocked is not asserted, it assumes that it is testing external triggers
-  
-        if TrigOutFull(i) = '0' then
-          -- Write an incrementing or decrementing trigger pattern for trigger testing
-          if TrigInvert(i) = '0' then
-            TrigOutDat(i) <= TrigOutDat(i) + 1;
-          else
-            TrigOutDat(i) <= TrigOutDat(i) - 1;
-          end if;
-
-          -- Write TrigOutDat on next clock.  Zero value triggers are ignored by the receiver
-          -- Delay writing the Trigger Output FIFO until 128 clocks after reset deasserted
-          TrigWr(i) <= TrigActive(i);
-        end if;
-
-      end if;
-    end process;
-    
-  end generate;
-
-  -- 8 channels of PWM 
-  PWM1 : for i in 0 to 7 generate
-    PWMX : PWMA8
-    port map
-    (
-      CLK => CLK_100MHZ,
-      RESET => USER_RST,
-      DIN => x"52",  -- Fix at 0.8V for now.  Eventually drive from a status register
-      PWM_OUT => THR(i)
-    );
-  end generate;
-
+	-- 8 channels of PWM 
+	PWM1 : for i in 0 to 7 generate
+		PWMX : entity work.PWMA8
+		port map
+		(
+			CLK => CLK_100MHZ,
+			RESET => USER_RST,
+			DIN => x"52",  -- Fix at 0.8V for now.  Eventually drive from a status register
+			PWM_OUT => THR(i)
+		);
+	end generate;
+ 
 end behavior;
