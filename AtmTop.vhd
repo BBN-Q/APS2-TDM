@@ -144,7 +144,6 @@ signal TrigWr         : std_logic_vector(8 downto 0);
 signal TrigOutFull    : std_logic_vector(8 downto 0);
 
 signal TrigInDat      : std_logic_vector(7 downto 0);
-signal TrigInChk      : std_logic_vector(7 downto 0);
 signal TrigClkErr     : std_logic;
 signal TrigOvflErr    : std_logic;
 signal TrigLocked     : std_logic;
