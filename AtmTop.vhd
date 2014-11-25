@@ -151,6 +151,8 @@ signal TrigInReady    : std_logic;
 signal TrigInRd       : std_logic;
 signal TrigFull       : std_logic;
 
+signal latched_trig_word : std_logic_vector(31 downto 0);
+
 signal CMP : std_logic_vector(7 downto 0);
 
 -- Temperature signals
@@ -562,7 +564,7 @@ begin
 
 		resets => resets,
 		controls => open,
-		dummyStatus => x"12345678",
+		trigger_word => latched_trig_word,
 		dummyStatus2 => x"87654321",
 
 		S_AXI_ACLK => CLK_100MHZ,
@@ -638,6 +640,15 @@ begin
 				TrigWr <= (others => '0');
 			else
 				TrigWr <= (others => CMP(7)); -- use CMP(7) as valid signal
+			end if;
+		end if;
+	end process;
+
+	process (CLK_100MHZ)
+	begin
+		if rising_edge(CLK_100MHZ) then
+			if TrigWr(0) = '1' then
+				latched_trig_word <= latched_trig_word(23 downto 0) & TrigOutDat(0);
 			end if;
 		end if;
 	end process;

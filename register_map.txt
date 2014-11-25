@@ -1,0 +1,24 @@
+ATM CSR Register Map
+==============================
+
+CSR Registers are implemented in the APS_CSR module.
+
+Registers
+------------------------
+
+The following register map is currently implemented:
+
+Address     Register          I/O
+0           resets             I
+1           trigger_word       O
+2           controls           I
+3           dummyStatus2       O
+
+Bit Maps
+---------------------
+
+resets
+	0 : open
+	1 : open
+	2 : open
+	3 : open 
