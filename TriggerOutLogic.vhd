@@ -137,12 +137,11 @@ begin
       TrigRd <= not TrigRd and not TrigEmpty;
 
       -- Only present non-zero data when there is a valid FIFO output
-      -- The output is ALWAYS writing.  When there are not triggers, it writes zero
-      -- This ignores zeros written by the host and non-zero outputs that are due to an empty FIFO
+      -- The output is ALWAYS writing.  When there are not triggers, it writes 0xFF
       if TrigEmpty = '0' and TrigRd = '1' then
         SerTrigOut <= TrigDat;
       else
-        SerTrigOut <= "00000000";
+        SerTrigOut <= x"ff";
       end if;
     end if;
   end process;
