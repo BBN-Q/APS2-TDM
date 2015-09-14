@@ -10,7 +10,7 @@
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2014.2
+set scripts_vivado_version 2015.1
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -31,6 +31,13 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 # you can create a project using the following command:
 #    create_project project_1 myproj -part xc7a200tfbg676-2
 
+# CHECKING IF PROJECT EXISTS
+if { [get_projects -quiet] eq "" } {
+   puts "ERROR: Please open or create a project!"
+   return 1
+}
+
+
 
 # CHANGE DESIGN NAME HERE
 set design_name Memory
@@ -39,13 +46,6 @@ set design_name Memory
 # you can create a design using the following command:
 #    create_bd_design $design_name
 
-# CHECKING IF PROJECT EXISTS
-if { [get_projects -quiet] eq "" } {
-   puts "ERROR: Please open or create a project!"
-   return 1
-}
-
-
 # Creating design if needed
 set errMsg ""
 set nRet 0
@@ -53,37 +53,50 @@ set nRet 0
 set cur_design [current_bd_design -quiet]
 set list_cells [get_bd_cells -quiet]
 
-if { ${design_name} ne "" && ${cur_design} eq ${design_name} } {
+if { ${design_name} eq "" } {
+   # USE CASES:
+   #    1) Design_name not set
 
-   # Checks if design is empty or not
-   if { $list_cells ne "" } {
-      set errMsg "ERROR: Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
-      set nRet 1
-   } else {
-      puts "INFO: Constructing design in IPI design <$design_name>..."
-   }
-} elseif { ${cur_design} ne "" && ${cur_design} ne ${design_name} } {
+   set errMsg "ERROR: Please set the variable <design_name> to a non-empty value."
+   set nRet 1
 
-   if { $list_cells eq "" } {
-      puts "INFO: You have an empty design <${cur_design}>. Will go ahead and create design..."
-   } else {
-      set errMsg "ERROR: Design <${cur_design}> is not empty! Please do not source this script on non-empty designs."
-      set nRet 1
+} elseif { ${cur_design} ne "" && ${list_cells} eq "" } {
+   # USE CASES:
+   #    2): Current design opened AND is empty AND names same.
+   #    3): Current design opened AND is empty AND names diff; design_name NOT in project.
+   #    4): Current design opened AND is empty AND names diff; design_name exists in project.
+
+   if { $cur_design ne $design_name } {
+      puts "INFO: Changing value of <design_name> from <$design_name> to <$cur_design> since current design is empty."
+      set design_name [get_property NAME $cur_design]
    }
+   puts "INFO: Constructing design in IPI design <$cur_design>..."
+
+} elseif { ${cur_design} ne "" && $list_cells ne "" && $cur_design eq $design_name } {
+   # USE CASES:
+   #    5) Current design opened AND has components AND same names.
+
+   set errMsg "ERROR: Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
+   set nRet 1
+} elseif { [get_files -quiet ${design_name}.bd] ne "" } {
+   # USE CASES: 
+   #    6) Current opened design, has components, but diff names, design_name exists in project.
+   #    7) No opened design, design_name exists in project.
+
+   set errMsg "ERROR: Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
+   set nRet 2
+
 } else {
+   # USE CASES:
+   #    8) No opened design, design_name not in project.
+   #    9) Current opened design, has components, but diff names, design_name not in project.
 
-   if { [get_files -quiet ${design_name}.bd] eq "" } {
-      puts "INFO: Currently there is no design <$design_name> in project, so creating one..."
+   puts "INFO: Currently there is no design <$design_name> in project, so creating one..."
 
-      create_bd_design $design_name
+   create_bd_design $design_name
 
-      puts "INFO: Making design <$design_name> as current_bd_design."
-      current_bd_design $design_name
-
-   } else {
-      set errMsg "ERROR: Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
-      set nRet 3
-   }
+   puts "INFO: Making design <$design_name> as current_bd_design."
+   current_bd_design $design_name
 
 }
 
@@ -135,13 +148,13 @@ proc create_root_design { parentCell } {
   set ethernet_mm2s [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_mm2s ]
   set_property -dict [ list CONFIG.FREQ_HZ {100000000}  ] $ethernet_mm2s
   set ethernet_mm2s_cmd [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_mm2s_cmd ]
-  set_property -dict [ list CONFIG.CLK_DOMAIN {} CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {0} CONFIG.HAS_TLAST {0} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {9} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_mm2s_cmd
+  set_property -dict [ list CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {0} CONFIG.HAS_TLAST {0} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {9} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_mm2s_cmd
   set ethernet_mm2s_sts [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_mm2s_sts ]
   set_property -dict [ list CONFIG.FREQ_HZ {100000000}  ] $ethernet_mm2s_sts
   set ethernet_s2mm [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_s2mm ]
-  set_property -dict [ list CONFIG.CLK_DOMAIN {} CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {1} CONFIG.HAS_TLAST {1} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {4} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_s2mm
+  set_property -dict [ list CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {1} CONFIG.HAS_TLAST {1} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {4} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_s2mm
   set ethernet_s2mm_cmd [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_s2mm_cmd ]
-  set_property -dict [ list CONFIG.CLK_DOMAIN {} CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {0} CONFIG.HAS_TLAST {0} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {9} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_s2mm_cmd
+  set_property -dict [ list CONFIG.FREQ_HZ {100000000} CONFIG.HAS_TKEEP {0} CONFIG.HAS_TLAST {0} CONFIG.HAS_TREADY {1} CONFIG.HAS_TSTRB {0} CONFIG.LAYERED_METADATA {undef} CONFIG.PHASE {0.000} CONFIG.TDATA_NUM_BYTES {9} CONFIG.TDEST_WIDTH {0} CONFIG.TID_WIDTH {0} CONFIG.TUSER_WIDTH {0}  ] $ethernet_s2mm_cmd
   set ethernet_s2mm_sts [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 ethernet_s2mm_sts ]
   set_property -dict [ list CONFIG.FREQ_HZ {100000000}  ] $ethernet_s2mm_sts
 
