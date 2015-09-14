@@ -30,6 +30,8 @@ set_property target_constrs_file $source_dir/constraints/ATM_B206.xdc [current_f
 # ip cores
 set ip_srcs [glob $source_dir/ip/*.xci]
 import_ip $ip_srcs
+#Now the TEMAC from 2014.4
+import_files $SOURCE_DIR/ip/GIGE_MAC/GIGE_MAC.xci
 
 #Memory BD
 source $source_dir/scripts/Memory.tcl
