@@ -24,7 +24,9 @@ port (
 	resets	          : out std_logic_vector(31 downto 0);
 	controls          : out std_logic_vector(31 downto 0);
 	trigger_word      : in  std_logic_vector(31 downto 0);
-	dummyStatus2      : in  std_logic_vector(31 downto 0);
+	trigger_interval  : out std_logic_vector(31 downto 0);
+	trigger_control   : out std_logic_vector(31 downto 0);
+	dummy_status      : in  std_logic_vector(31 downto 0);
 	-- User ports ends
 	-- Do not modify the ports beyond this line
 
@@ -351,8 +353,8 @@ begin
 	-- Add user logic here
 
 	--Named wiring
-	status <= (trigger_word, dummyStatus2);
-	(resets, controls) <= control;
+	status <= (trigger_word, dummy_status);
+	(resets, trigger_interval, trigger_control, controls) <= control;
 
 	--Connect control and status to internal registers and synchronize--
 	--Control gets syncronized onto the system clock domain

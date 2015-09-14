@@ -11,14 +11,21 @@ The following register map is currently implemented:
 Address     Register          I/O
 0           resets             I
 1           trigger_word       O
-2           controls           I
-3           dummyStatus2       O
+2           trigger_interval   I
+3           trigger_control    I
+4           controls           I
+5           dummy_status       O
 
 Bit Maps
 ---------------------
 
 resets
-	0 : open
+	0 : Internal Trigger
 	1 : open
 	2 : open
 	3 : open 
+
+trigger_control:
+
+	0 : trigger source (0 internal, 1 software)
+	2 : software trigger toggle

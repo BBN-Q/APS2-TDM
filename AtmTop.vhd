@@ -155,6 +155,11 @@ signal latched_trig_word : std_logic_vector(31 downto 0);
 
 signal CMP : std_logic_vector(7 downto 0);
 
+-- Internal trigger signals
+signal trigger          : std_logic;
+signal trigger_interval : std_logic_vector(31 downto 0);
+signal trigger_control  : std_logic_vector(31 downto 0);
+
 -- Temperature signals
 signal DrpData : std_logic_vector(15 downto 0);
 signal CurTemp : std_logic_vector(15 downto 0);
@@ -565,7 +570,9 @@ begin
 		resets => resets,
 		controls => open,
 		trigger_word => latched_trig_word,
-		dummyStatus2 => x"87654321",
+		trigger_interval => trigger_interval,
+		trigger_control => trigger_control,
+		dummy_status => x"12345678",
 
 		S_AXI_ACLK => CLK_100MHZ,
 		S_AXI_ARESETN => AXI_resetn,
@@ -632,14 +639,20 @@ begin
 	LED(9) <= TrigClkErr or TrigOvflErr;
 
 	-- basic logic to broadcast input triggers to all output triggers
+	-- VALID on CMP(7) or internal trigger
+	-- DATA is CMP(6 downto 0) except when internal trigger fires, in which case we send 0xFE
 	process(CLK_100MHZ, USER_RST)
 	begin
 		if rising_edge(CLK_100MHZ) then
-			TrigOutDat <= (others => '0' & CMP(6 downto 0));
+			if trigger = '1' then
+				TrigOutDat <= (others => x"fe");
+			else
+				TrigOutDat <= (others => '0' & CMP(6 downto 0));
+			end if;
 			if USER_RST = '1' or or_reduce(TrigOutFull) = '1' then
 				TrigWr <= (others => '0');
 			else
-				TrigWr <= (others => CMP(7)); -- use CMP(7) as valid signal
+				TrigWr <= (others => CMP(7) or trigger); -- use CMP(7) as valid signal
 			end if;
 		end if;
 	end process;
@@ -725,5 +738,15 @@ begin
 			PWM_OUT => THR(i)
 		);
 	end generate;
+
+	IntTrig : entity work.InternalTrig
+	port map (
+		RESET => resets(0),
+		CLK => CLK_100MHZ,
+		triggerInterval => trigger_interval,
+		triggerSource => trigger_control(0),
+		softTrigToggle => trigger_control(2),
+		trigger => trigger
+	);
  
 end behavior;
