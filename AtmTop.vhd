@@ -325,7 +325,7 @@ begin
 
 	-- Combine Link LED with external Trigger inputs.  Link only active during initial syncing
 	DBG(3) <= '0' when (STATUS(3) = '0'
-	              or (TrigLocked = '1' and LedToggle(25) = '1'))  -- Slow bink if locked w/o errors, off if not locked
+	              or (TrigLocked = '1' and LedToggle(25) = '1'))  -- Slow blink if locked w/o errors, off if not locked
 	           else '1';
 
 	-- Black wire = pin 1 = RED cathode.  Red = pin 2 = GRN cathode.
