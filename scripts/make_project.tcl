@@ -16,7 +16,7 @@ create_project -force $project_name $project_dir/$project_name -part xc7a200tfbg
 set_property target_language VHDL [current_project]
 
 # add VHDL and NGC sources
-add_files -norecurse $source_dir $source_dir/UDP 
+add_files -norecurse $source_dir $source_dir/UDP
 set ngc_srcs [glob $source_dir/ip/*.ngc]
 add_files -norecurse $ngc_srcs
 
@@ -48,3 +48,6 @@ update_compile_order -fileset sim_1
 
 # simulation generics
 set_property generic "APS_REPO_PATH=\"$source_dir\"" [get_filesets sim_1]
+
+#Get headerless bit file output
+set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]
