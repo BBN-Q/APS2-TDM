@@ -381,3 +381,10 @@ set_clock_groups -asynchronous \
 # Don't care about output timing on these signals
 set_false_path -to [get_ports {DBG[*]}]
 set_false_path -to [get_ports {LED[*]}]
+
+#Set configuration voltages to avoid DRC issue
+#Also set consistent IOSTANDARD for vp/vn from XADC which are hard-wired to Bank 0 which is used for config
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 2.5 [current_design]
+set_property IOSTANDARD LVCMOS25 [get_ports VP_IN]
+set_property IOSTANDARD LVCMOS25 [get_ports VN_IN]
