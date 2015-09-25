@@ -78,7 +78,6 @@ type IOState_t is (IDLE, WRITE_AXI_CMD, READ_AXI_CMD, WRITE_SINGLE, WRITE_DATA, 
 signal ioState : IOState_t := IDLE;
 
 signal wordCt : unsigned(15 downto 0) := (others => '0'); -- words left to read/write on this command
-signal writing : boolean := false;
 
 type DataMoverCmd_t is record
 	rsvd : std_logic_vector(3 downto 0) ;
@@ -113,7 +112,7 @@ USER_DOF <= MM2S_tdata;
 USER_DOF_WR <= MM2S_tvalid;
 
 --Pull the next data when we are writing and when the data mover can take it
-USER_DIF_RD <= '1' when writing and S2MM_tready = '1' else '0';
+USER_DIF_RD <= '1' when (ioState = WRITE_DATA) and S2MM_tready = '1' else '0';
 
 --Assume 4 byte boundaries for now
 S2MM_tkeep <= "1111";
@@ -121,6 +120,9 @@ S2MM_tkeep <= "1111";
 --We only have one source of mover commands so wire both directions to the same command
 S2MM_CMD_tdata <=  movercmd2slv(moverCmd);
 MM2S_CMD_tdata <= movercmd2slv(moverCmd);
+S2MM_CMD_tvalid <= '1' when (ioState = WRITE_AXI_CMD) else '0';
+S2MM_tvalid <= '1' when (ioState = WRITE_DATA) else '0';
+S2MM_tlast <= '1' when ((ioState = WRITE_DATA) and (wordCt = 0)) else '0';
 
 mainProc : process( USER_CLK )
 
@@ -130,26 +132,17 @@ begin
 		if USER_RST = '1' then
 			wordCt <= (others => '0');
 			ioState <= IDLE;
-			writing <= false;
 			USER_CIF_RD <= '0';
 			USER_COF_WR <= '0';
 			USER_COF_CNT <= (others => '0');
 			USER_COF_STAT <= (others => '0');
 			MM2S_CMD_tvalid <= '0';
-			S2MM_CMD_tvalid <= '0';
-			S2MM_tlast <= '0';
-			S2MM_tvalid <= '0';
 
 		else
 		  --defaults
 			MM2S_CMD_tvalid <= '0';
-			S2MM_CMD_tvalid <= '0';
-			S2MM_tlast <= '0';
-			S2MM_tvalid <= '0';
-
 			USER_COF_WR <= '0';
 			USER_CIF_RD <= '0';
-			writing <= false;
 
 		  case ( ioState ) is
 
@@ -178,8 +171,6 @@ begin
 				end if ;
 
 			when WRITE_AXI_CMD =>
-				S2MM_CMD_tvalid <= '1';
-
 				--wait until data mover has taken command
 				if S2MM_CMD_tready = '1' then
 					ioState <= WRITE_DATA;
@@ -188,11 +179,6 @@ begin
 				end if;
 
 			when WRITE_DATA =>
-				S2MM_tvalid <= '1';
-				writing <= true;
-				if wordCt = 0 then
-					S2MM_tlast <= '1';
-				end if;
 				--Count down data and signal end with tlast
 				--In future this should be handled elsewhere on the AXI stream
 				if S2MM_tready = '1' then
