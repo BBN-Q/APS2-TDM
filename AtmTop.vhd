@@ -403,7 +403,7 @@ begin
 		rxn                  => rxn,
 
 		-- Config Bus Connections
-		CFG_CLK        => CLK_100MHZ,   -- CLK_100MHZ is driven by CFG_CCLK
+		CFG_CLK        => CFG_CCLK,   -- CLK_100MHZ is driven by CFG_CCLK
 		CFGD           => CFGD,
 		FPGA_CMDL      => FPGA_CMDL,
 		FPGA_RDYL      => FPGA_RDYL,

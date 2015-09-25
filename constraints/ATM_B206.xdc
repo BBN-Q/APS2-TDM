@@ -49,13 +49,13 @@ set_property IOSTANDARD LVCMOS25 [get_ports CFG_CCLK]
 
 # Config Bus Input Timing Constraints
 create_clock -period 10.000 -name CFG_CCLK [get_ports CFG_CCLK]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports {CFGD[*]}]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports {CFGD[*]}]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports {CFGD[*]}]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports CFG_RDY]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_RDY]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_RDY]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports CFG_ACT]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_ACT]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_ACT]
-set_input_delay -clock CFG_CCLK -max 6.000 [get_ports CFG_ERR]
+set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_ERR]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_ERR]
 
 # Config Bus Output Timing Constraints
@@ -367,16 +367,15 @@ create_clock -period 10.000 -name TAUX_CLK -waveform {0.000 5.000} [get_pins TIL
 set_property PACKAGE_PIN A7 [get_ports txn]
 set_property PACKAGE_PIN E11 [get_ports gtrefclk_n]
 
-#-----------------------------------------------------------
-# PCS/PMA Clock period Constraints: please do not relax    -
-#-----------------------------------------------------------
 # Disable checking on OE timing since it is enabled more than one clock ahead of using the data
 set_false_path -from [get_cells AC1/AMP1/ACP1/CFG1/ExtOE] -to [get_ports {CFGD[*]}]
 set_false_path -to [get_ports STAT_OEL]
 
+# ostrich-style timing groups
 set_clock_groups -asynchronous \
 -group [get_clocks -of_objects [get_pins CK0/CLK_100MHZ]] \
--group [get_clocks clkout0]
+-group [get_clocks clkout0] \
+-group [get_clocks CFG_CCLK]
 
 # Don't care about output timing on these signals
 set_false_path -to [get_ports {DBG[*]}]
