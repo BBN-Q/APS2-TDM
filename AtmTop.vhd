@@ -152,7 +152,9 @@ signal TrigInRd       : std_logic;
 signal TrigFull       : std_logic;
 
 signal latched_trig_word : std_logic_vector(31 downto 0);
-
+signal ext_valid    : std_logic;
+signal ext_valid_d  : std_logic;
+signal ext_valid_re : std_logic;
 signal CMP : std_logic_vector(7 downto 0);
 
 -- Internal trigger signals
@@ -639,11 +641,14 @@ begin
 	LED(9) <= TrigClkErr or TrigOvflErr;
 
 	-- basic logic to broadcast input triggers to all output triggers
-	-- VALID on CMP(7) or internal trigger
+	-- VALID on rising edge of CMP(7) or internal trigger
 	-- DATA is CMP(6 downto 0) except when internal trigger fires, in which case we send 0xFE
+	ext_valid <= CMP(7); -- use CMP(7) as valid signal for external data
+	ext_valid_re <= ext_valid and not ext_valid_d;
 	process(CLK_100MHZ, USER_RST)
 	begin
 		if rising_edge(CLK_100MHZ) then
+			ext_valid_d <= ext_valid;
 			if trigger = '1' then
 				TrigOutDat <= (others => x"fe");
 			else
@@ -652,7 +657,7 @@ begin
 			if USER_RST = '1' or or_reduce(TrigOutFull) = '1' then
 				TrigWr <= (others => '0');
 			else
-				TrigWr <= (others => CMP(7) or trigger); -- use CMP(7) as valid signal
+				TrigWr <= (others => ext_valid_re or trigger);
 			end if;
 		end if;
 	end process;
