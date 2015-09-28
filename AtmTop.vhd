@@ -152,9 +152,9 @@ signal TrigInRd       : std_logic;
 signal TrigFull       : std_logic;
 
 signal latched_trig_word : std_logic_vector(31 downto 0);
-signal ext_valid    : std_logic;
-signal ext_valid_d  : std_logic;
-signal ext_valid_re : std_logic;
+signal ext_valid      : std_logic;
+signal ext_valid_d    : std_logic;
+signal ext_valid_re   : std_logic;
 signal CMP : std_logic_vector(7 downto 0);
 
 -- Internal trigger signals
@@ -642,8 +642,11 @@ begin
 
 	-- basic logic to broadcast input triggers to all output triggers
 	-- VALID on rising edge of CMP(7) or internal trigger
+	-- sync external valid on CLK_100MHZ
+	sync_valid : entity work.synchronizer
+	port map ( reset => USER_RST, clk => CLK_100MHZ, i_data => CMP(7), o_data => ext_valid );
+
 	-- DATA is CMP(6 downto 0) except when internal trigger fires, in which case we send 0xFE
-	ext_valid <= CMP(7); -- use CMP(7) as valid signal for external data
 	ext_valid_re <= ext_valid and not ext_valid_d;
 	process(CLK_100MHZ, USER_RST)
 	begin
