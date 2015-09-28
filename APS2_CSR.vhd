@@ -222,7 +222,7 @@ begin
 			begin
 				if rising_edge(S_AXI_ACLK) then 
 			    	if S_AXI_ARESETN = '0' then
-			    		regs(CSR_WRITE_REGS(ct)) <= (others => '0');
+			    		regs(CSR_WRITE_REGS(ct)) <= CSR_WRITE_REGS_INIT(ct);
 				    else
 						--Again control registers are written from bus 
 						loc_addr := to_integer(unsigned(axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB) ));

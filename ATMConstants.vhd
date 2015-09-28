@@ -28,13 +28,15 @@ package ATMConstants is
     -- Firmware version reported to user
     ------------------------------------------------------
 
-	constant USER_VERSION : std_logic_vector(31 downto 0) := x"00000006";
+	constant USER_VERSION : std_logic_vector(31 downto 0) := x"00000007";
 
     --CSR register read / write directions
     type CSR_ARRAY_t is array(natural range <>) of natural;
 
     constant CSR_READ_REGS : CSR_ARRAY_t(0 to 1) := (1, 5);
     constant CSR_WRITE_REGS : CSR_ARRAY_t(0 to 3) := (0, 2, 3, 4);
+    type CSR_ARRAY_INIT_t is array(natural range <>) of std_logic_vector(31 downto 0);
+    constant CSR_WRITE_REGS_INIT : CSR_ARRAY_INIT_t(0 to 3) := (0 => x"00000001", others => x"00000000");
 
 end ATMConstants;
 
