@@ -40,11 +40,11 @@ package AtmIPCores is
 	port
 	(
 		-- Clock in ports
-		CLK_100MHZ_IN           : in     std_logic;
+		CLK_100MHZ_IN     : in     std_logic;
 
 		-- Clock out ports
-		TRIG_100MHZ          : out    std_logic;
-		TRIG_400MHZ          : out    std_logic;
+		TRIG_100MHZ       : out    std_logic;
+		TRIG_400MHZ       : out    std_logic;
 
 		-- Status and control signals
 		RESET             : in     std_logic;
@@ -53,6 +53,22 @@ package AtmIPCores is
 	end component;
 	ATTRIBUTE SYN_BLACK_BOX OF TRIG_MMCM : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF TRIG_MMCM : COMPONENT IS "CLK_100MHZ_IN,TRIG_100MHZ,TRIG_400MHZ,RESET,LOCKED";
+
+	component REF_MMCM
+	port
+	(
+		CLK_REF        : in     std_logic;
+
+		-- Clock out ports
+		CLK_100MHZ     : out    std_logic;
+
+		-- Status and control signals
+		RESET          : in     std_logic;
+		LOCKED         : out    std_logic
+	);
+	end component;
+	ATTRIBUTE SYN_BLACK_BOX OF REF_MMCM : COMPONENT IS TRUE;
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF REF_MMCM : COMPONENT IS "CLK_REF,CLK_100MHz,reset,locked";
 
 	component TIO_FIFO
 	port (

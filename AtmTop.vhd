@@ -100,6 +100,7 @@ signal CLK_100MHZ    : std_logic;
 signal CLK_125MHZ    : std_logic;
 signal CLK_200MHZ    : std_logic;
 signal CLK_400MHZ    : std_logic;
+signal REF_100MHZ    : std_logic;
 
 signal AXI_resetn    : std_logic;
 
@@ -131,6 +132,7 @@ signal USER_COF_WR    : std_logic;
 
 signal UseInputs    : std_logic;
 signal CfgLocked    : std_logic;
+signal RefLocked    : std_logic;
 signal SfpTimer     : std_logic_vector(24 downto 0);
 
 signal LedToggle : std_logic_vector(27 downto 0);
@@ -363,14 +365,27 @@ begin
 	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "10000000")
 	             else '0';
 
-	-- Convert CFG Clock to 200 MHz for the delay calibratrion clock and serial data input and 400 MHz for the data output clock
+	CK1: REF_MMCM
+	port map (
+		CLK_REF => REF_FPGA,
+
+		-- clock out ports
+		CLK_100MHZ => REF_100MHZ,
+
+		-- status and control signals
+		RESET      => not FPGA_RESETL,
+		LOCKED     => RefLocked
+	);
+
+	-- Create aligned 100 and 400 MHz clocks for SATA in/out logic.
+	-- 200 MHz clock is used for delay calibration
 	CK0 : CCLK_MMCM
 	port map
 	(
-		CLK_100MHZ_IN  => CFG_CCLK,
+		CLK_100MHZ_IN  => REF_100MHZ,
 	
 		-- Clock out ports
-		CLK_100MHZ     => CLK_100MHZ,  -- Replaces previous CFG_CCLK
+		CLK_100MHZ     => CLK_100MHZ,
 		CLK_200MHZ     => CLK_200MHZ,
 		CLK_400MHZ     => CLK_400MHZ,
 	
@@ -379,7 +394,7 @@ begin
 		LOCKED         => CfgLocked
 	);
 
-	GlobalReset <= not CfgLocked;  -- Use lock status of the PLL driven by CFG_CCLK and reset by FPGA_RESETL as the global reset
+	GlobalReset <= not CfgLocked;  -- Use lock status of the PLL driven by REF_100MHZ and reset by FPGA_RESETL as the global reset
 
 	USER_STATUS(15 downto 0) <= CurTemp;
 
@@ -403,7 +418,7 @@ begin
 		rxn                  => rxn,
 
 		-- Config Bus Connections
-		CFG_CLK        => CFG_CCLK,   -- CLK_100MHZ is driven by CFG_CCLK
+		CFG_CLK        => CFG_CCLK,
 		CFGD           => CFGD,
 		FPGA_CMDL      => FPGA_CMDL,
 		FPGA_RDYL      => FPGA_RDYL,
@@ -574,7 +589,9 @@ begin
 		trigger_word => latched_trig_word,
 		trigger_interval => trigger_interval,
 		trigger_control => trigger_control,
-		dummy_status => x"12345678",
+		dummy_status(31 downto 8) => x"1234567",
+		dummy_status(7 downto 1) => (others => '0'),
+		dummy_status(0) => RefLocked,
 
 		S_AXI_ACLK => CLK_100MHZ,
 		S_AXI_ARESETN => AXI_resetn,
