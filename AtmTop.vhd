@@ -96,11 +96,13 @@ architecture behavior of AtmTop is
 type TEMP_STATE is (TS_INIT, TS_READ, TS_WAIT);
 signal TempState : TEMP_STATE;
 
+signal CFG_CLK       : std_logic;
 signal CLK_100MHZ    : std_logic;
 signal CLK_125MHZ    : std_logic;
 signal CLK_200MHZ    : std_logic;
 signal CLK_400MHZ    : std_logic;
 signal REF_100MHZ    : std_logic;
+signal clock_select  : std_logic;
 
 signal AXI_resetn    : std_logic;
 
@@ -133,6 +135,7 @@ signal USER_COF_WR    : std_logic;
 signal UseInputs    : std_logic;
 signal CfgLocked    : std_logic;
 signal RefLocked    : std_logic;
+signal SysLocked    : std_logic;
 signal SfpTimer     : std_logic_vector(24 downto 0);
 
 signal LedToggle : std_logic_vector(27 downto 0);
@@ -365,6 +368,7 @@ begin
 	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "10000000")
 	             else '0';
 
+	-- multiply reference clock up to 100 MHz
 	CK1: REF_MMCM
 	port map (
 		CLK_REF => REF_FPGA,
@@ -379,10 +383,13 @@ begin
 
 	-- Create aligned 100 and 400 MHz clocks for SATA in/out logic.
 	-- 200 MHz clock is used for delay calibration
-	CK0 : CCLK_MMCM
+	CK0 : SYS_MMCM
 	port map
 	(
-		CLK_100MHZ_IN  => REF_100MHZ,
+		-- Clock in ports
+		REF_100MHZ_IN  => REF_100MHZ,
+		CLK_125MHZ_IN  => CLK_125MHZ,
+		CLK_IN_SEL     => clock_select, -- choose REF_100MHZ when HIGH
 	
 		-- Clock out ports
 		CLK_100MHZ     => CLK_100MHZ,
@@ -391,10 +398,20 @@ begin
 	
 		-- Status and control signals
 		RESET          => not FPGA_RESETL,
-		LOCKED         => CfgLocked
+		LOCKED         => SysLocked
 	);
 
-	GlobalReset <= not CfgLocked;  -- Use lock status of the PLL driven by REF_100MHZ and reset by FPGA_RESETL as the global reset
+	clock_select <= RefLocked;
+
+	GlobalReset <= not SysLocked;  -- Use lock status of the PLL driven by REF_100MHZ and reset by FPGA_RESETL as the global reset
+
+	CK2 : CCLK_MMCM
+	port map (
+		CLK_100MHZ_IN => CFG_CCLK,
+		CLK_100MHZ    => CFG_CLK,
+		RESET         => not FPGA_RESETL,
+		LOCKED        => CfgLocked
+	);
 
 	USER_STATUS(15 downto 0) <= CurTemp;
 
@@ -418,7 +435,7 @@ begin
 		rxn                  => rxn,
 
 		-- Config Bus Connections
-		CFG_CLK        => CFG_CCLK,
+		CFG_CLK        => CFG_CLK,
 		CFGD           => CFGD,
 		FPGA_CMDL      => FPGA_CMDL,
 		FPGA_RDYL      => FPGA_RDYL,
@@ -460,7 +477,7 @@ begin
 
 	    reset => GlobalReset,
 	    clk_axi => CLK_100MHZ,
-	    clk_axi_locked => CfgLocked,
+	    clk_axi_locked => SysLocked,
 	    AXI_resetn(0) => AXI_resetn,
 
 		------------------------------------------------------------------
@@ -590,7 +607,8 @@ begin
 		trigger_interval => trigger_interval,
 		trigger_control => trigger_control,
 		dummy_status(31 downto 8) => x"1234567",
-		dummy_status(7 downto 1) => (others => '0'),
+		dummy_status(7 downto 2) => (others => '0'),
+		dummy_status(1) => CfgLocked,
 		dummy_status(0) => RefLocked,
 
 		S_AXI_ACLK => CLK_100MHZ,

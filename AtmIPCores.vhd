@@ -18,23 +18,23 @@ package AtmIPCores is
 	);
 	end component;
 
-	component CCLK_MMCM
+	component SYS_MMCM
 	port
-	(
-		CLK_100MHZ_IN  : in     std_logic;
-
-		-- Clock out ports
-		CLK_100MHZ     : out    std_logic;
-		CLK_200MHZ     : out    std_logic;
-		CLK_400MHZ     : out    std_logic;
-
-		-- Status and control signals
-		RESET          : in     std_logic;
-		LOCKED         : out    std_logic
-	);
+	 (-- Clock in ports
+	  REF_100MHZ_IN           : in     std_logic;
+	  CLK_125MHZ_IN           : in     std_logic;
+	  CLK_IN_SEL           : in     std_logic;
+	  -- Clock out ports
+	  CLK_100MHZ          : out    std_logic;
+	  CLK_200MHZ          : out    std_logic;
+	  CLK_400MHZ          : out    std_logic;
+	  -- Status and control signals
+	  RESET             : in     std_logic;
+	  LOCKED            : out    std_logic
+	 );
 	end component;
-	ATTRIBUTE SYN_BLACK_BOX OF CCLK_MMCM : COMPONENT IS TRUE;
-	ATTRIBUTE BLACK_BOX_PAD_PIN OF CCLK_MMCM : COMPONENT IS "CLK_100MHZ_IN,CLK_100MHz,CLK_200MHz,CLK_400MHz,reset,locked";
+	ATTRIBUTE SYN_BLACK_BOX OF SYS_MMCM : COMPONENT IS TRUE;
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF SYS_MMCM : COMPONENT IS "REF_100MHZ_IN,CLK_125MHZ_IN,CLK_IN_SEL,CLK_100MHZ,CLK_200MHZ,CLK_400MHZ,RESET,LOCKED";
 
 	component TRIG_MMCM
 	port
@@ -56,19 +56,34 @@ package AtmIPCores is
 
 	component REF_MMCM
 	port
-	(
-		CLK_REF        : in     std_logic;
-
-		-- Clock out ports
-		CLK_100MHZ     : out    std_logic;
-
-		-- Status and control signals
-		RESET          : in     std_logic;
-		LOCKED         : out    std_logic
-	);
+	 (-- Clock in ports
+	  CLK_REF           : in     std_logic;
+	  -- Clock out ports
+	  CLK_100MHZ          : out    std_logic;
+	  -- Status and control signals
+	  reset             : in     std_logic;
+	  locked            : out    std_logic
+	 );
 	end component;
 	ATTRIBUTE SYN_BLACK_BOX OF REF_MMCM : COMPONENT IS TRUE;
-	ATTRIBUTE BLACK_BOX_PAD_PIN OF REF_MMCM : COMPONENT IS "CLK_REF,CLK_100MHz,reset,locked";
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF REF_MMCM : COMPONENT IS "CLK_REF,CLK_100MHZ,reset,locked";
+
+	component CCLK_MMCM
+	port
+	(
+		-- Clock in ports
+		CLK_100MHZ_IN     : in     std_logic;
+
+		-- Clock out ports
+		CLK_100MHZ       : out    std_logic;
+
+		-- Status and control signals
+		RESET             : in     std_logic;
+		LOCKED            : out    std_logic
+	);
+	end component;
+	ATTRIBUTE SYN_BLACK_BOX OF CCLK_MMCM : COMPONENT IS TRUE;
+	ATTRIBUTE BLACK_BOX_PAD_PIN OF CCLK_MMCM : COMPONENT IS "CLK_100MHZ_IN,CLK_100MHZ,RESET,LOCKED";
 
 	component TIO_FIFO
 	port (

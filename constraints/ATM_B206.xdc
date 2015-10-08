@@ -49,14 +49,18 @@ set_property IOSTANDARD LVCMOS25 [get_ports CFG_CCLK]
 
 # Config Bus Input Timing Constraints
 create_clock -period 10.000 -name CFG_CCLK [get_ports CFG_CCLK]
-set_input_delay -clock CFG_CCLK -max 8.000 [get_ports {CFGD[*]}]
+set_input_delay -clock CFG_CCLK -max 7.500 [get_ports {CFGD[*]}]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports {CFGD[*]}]
-set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_RDY]
+set_input_delay -clock CFG_CCLK -max 7.500 [get_ports CFG_RDY]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_RDY]
-set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_ACT]
+set_input_delay -clock CFG_CCLK -max 7.500 [get_ports CFG_ACT]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_ACT]
-set_input_delay -clock CFG_CCLK -max 8.000 [get_ports CFG_ERR]
+set_input_delay -clock CFG_CCLK -max 7.500 [get_ports CFG_ERR]
 set_input_delay -clock CFG_CCLK -min 2.000 [get_ports CFG_ERR]
+
+# We skew CFG_CLK (CLK_100MHZ_CCLK_MMCM) by 1ns, so we need to add a multicycle path
+# constraint so that Vivado will examine the clock edge at 11ns
+set_multicycle_path 2 -setup -from [get_clocks CFG_CCLK] -to [get_clocks CLK_100MHZ_CCLK_MMCM]
 
 # Config Bus Output Timing Constraints
 # -max values are used for setup time.  2ns output_delay sets a Tco max of 8ns, since it is a 10ns cycle
@@ -375,7 +379,13 @@ set_false_path -to [get_ports STAT_OEL]
 set_clock_groups -asynchronous \
 -group [get_clocks -of_objects [get_pins CK0/CLK_100MHZ]] \
 -group [get_clocks clkout0] \
--group [get_clocks CFG_CCLK]
+-group [get_clocks -include_generated_clocks CFG_CCLK] \
+-group [get_clocks -of_objects [get_pins TIL1/CK1/TRIG_100MHZ]]
+
+set_clock_groups -physically_exclusive -group [get_clocks -include_generated_clocks -of_objects [get_pins CK0/REF_100MHZ_IN]] -group [get_clocks -include_generated_clocks -of_objects [get_pins CK0/CLK_125MHZ_IN]]
+
+# dedicated clock routing for CFG_CCLK
+set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets CK2/U0/CLK_100MHZ_IN_CCLK_MMCM]
 
 # Don't care about output timing on these signals
 set_false_path -to [get_ports {DBG[*]}]
