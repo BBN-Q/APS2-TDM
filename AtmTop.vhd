@@ -102,12 +102,12 @@ signal CLK_125MHZ    : std_logic;
 signal CLK_200MHZ    : std_logic;
 signal CLK_400MHZ    : std_logic;
 signal REF_100MHZ    : std_logic;
-signal clock_select  : std_logic;
 
 signal AXI_resetn    : std_logic;
 
 signal ExtTrig : std_logic_vector(7 downto 0);
 signal GlobalReset   : std_logic;
+signal SysClkReset   : std_logic := '0';
 signal STATUS : std_logic_vector(4 downto 0);
 
 	-- User Logic Connections
@@ -135,6 +135,8 @@ signal USER_COF_WR    : std_logic;
 signal UseInputs    : std_logic;
 signal CfgLocked    : std_logic;
 signal RefLocked    : std_logic;
+signal RefLocked_s  : std_logic;
+signal RefLocked_d  : std_logic;
 signal SysLocked    : std_logic;
 signal SfpTimer     : std_logic_vector(24 downto 0);
 
@@ -238,9 +240,9 @@ begin
 	SFP_SCL <= '1' when (FPGA_RESETL = '0' and UseInputs = '1') else '0';
 
 	-- Reset SFP module for at least 100ms when GlobalReset is deasserted
-	process(CLK_100MHZ, GlobalReset)
+	process(CLK_100MHZ, FPGA_RESETL)
 	begin
-		if Globalreset = '1' then
+		if FPGA_RESETL = '0' then
 			SfpTimer <= (others => '0');
 			SFP_ENH <= '0';
 			SFP_TXDIS <= '1';
@@ -368,6 +370,22 @@ begin
 	                 or (LedToggle(27) = '1' and LedToggle(23 downto 22) = "11" and CMP = "10000000")
 	             else '0';
 
+	sync_reflocked : entity work.synchronizer
+	port map ( reset => not(FPGA_RESETL), clk => CLK_125MHZ, i_data => RefLocked, o_data => RefLocked_s );
+
+	-- need to reset SYS_MMCM on rising or falling edge of RefLocked
+	sys_mmcm_reset : process( CLK_125MHZ )
+	begin
+		if rising_edge(CLK_125MHZ) then
+			RefLocked_d <= RefLocked_s;
+			if (RefLocked_d xor RefLocked_s) = '1' then
+				SysClkReset <= '1';
+			else
+				SysClkReset <= '0';
+			end if;	
+		end if;
+	end process ; -- sys_mmcm_reset
+
 	-- multiply reference clock up to 100 MHz
 	CK1: REF_MMCM
 	port map (
@@ -389,7 +407,7 @@ begin
 		-- Clock in ports
 		REF_100MHZ_IN  => REF_100MHZ,
 		CLK_125MHZ_IN  => CLK_125MHZ,
-		CLK_IN_SEL     => clock_select, -- choose REF_100MHZ when HIGH
+		CLK_IN_SEL     => RefLocked, -- choose REF_100MHZ when HIGH
 	
 		-- Clock out ports
 		CLK_100MHZ     => CLK_100MHZ,
@@ -397,11 +415,10 @@ begin
 		CLK_400MHZ     => CLK_400MHZ,
 	
 		-- Status and control signals
-		RESET          => not FPGA_RESETL,
+		RESET          => SysClkReset,
 		LOCKED         => SysLocked
 	);
 
-	clock_select <= RefLocked;
 
 	GlobalReset <= not SysLocked;  -- Use lock status of the PLL driven by REF_100MHZ and reset by FPGA_RESETL as the global reset
 
@@ -420,7 +437,7 @@ begin
 	port map
 	(
 		-- asynchronous reset
-		RESET                => GlobalReset,
+		RESET                => not(CfgLocked),
 
 		-- Clocks
 		CLK_200MHZ           => CLK_200MHZ,
