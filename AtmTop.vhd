@@ -241,9 +241,9 @@ begin
 	SFP_SCL <= '1' when (FPGA_RESETL = '0' and UseInputs = '1') else '0';
 
 	-- Reset SFP module for at least 100ms when GlobalReset is deasserted
-	process(CLK_100MHZ, FPGA_RESETL)
+	process(CFG_CLK, CfgLocked)
 	begin
-		if FPGA_RESETL = '0' then
+		if CfgLocked = '0' then
 			SfpTimer <= (others => '0');
 			SFP_ENH <= '0';
 			SFP_TXDIS <= '1';
@@ -252,7 +252,7 @@ begin
 			TempState <= TS_INIT;
 			DrpEn <= '0';
 			CurTemp <= (others => '0');
-		elsif rising_edge(CLK_100MHZ) then
+		elsif rising_edge(CFG_CLK) then
 			LedToggle <= LedToggle + 1;
 
 			if SFP_PRESL = '0' then
@@ -330,10 +330,6 @@ begin
 	-- DBG(1) Non-Matching Ethernet Packet Toggle
 	-- DBG(2) Ehernet Link Stauts, lit when link to SFP is active
 	-- DBG(3) Lights during SFP link initialization and when External Trigger input is high
-	-- DBG(4/DBG(5)) GRN = MIG Test Pass, RED = test fail, off = waiting for calibration to complete
-	-- DBG(5) Turns off when MIG Calibration successfully completes
-	-- DBG(6) PLL Lock for DAC Channel 0
-	-- DBG(7) PLL Lock for DAC Channel 1
 	 
 	-- Pass STATUS to Debug LEDs
 	DBG(2 downto 0) <= STATUS(2 downto 0);
@@ -414,7 +410,7 @@ begin
 	
 		-- Clock out ports
 		CLK_100MHZ     => CLK_100MHZ,
-		CLK_200MHZ     => CLK_200MHZ,
+		CLK_200MHZ     => open,
 		CLK_400MHZ     => CLK_400MHZ,
 	
 		-- Status and control signals
@@ -429,6 +425,7 @@ begin
 	port map (
 		CLK_100MHZ_IN => CFG_CCLK,
 		CLK_100MHZ    => CFG_CLK,
+		CLK_200MHZ    => CLK_200MHZ,
 		RESET         => not FPGA_RESETL,
 		LOCKED        => CfgLocked
 	);

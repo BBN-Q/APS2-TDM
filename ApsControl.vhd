@@ -133,7 +133,6 @@ signal tx_configuration_vector : std_logic_vector(79 downto 0)
 -- clock generation signals for tranceiver
 signal gtrefclk              : std_logic;                    -- Route gtrefclk through an IBUFG.
 signal resetdone             : std_logic;                    -- To indicate that the GT transceiver has completed its reset cycle
-signal mmcm_locked           : std_logic;                    -- MMCM locked signal.
 signal mmcm_reset            : std_logic;                    -- MMCM reset signal.
 signal clkfbout              : std_logic;                    -- MMCM feedback clock
 signal clkout0               : std_logic;                    -- MMCM clock0 output (62.5MHz).

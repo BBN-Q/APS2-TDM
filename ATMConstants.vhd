@@ -28,7 +28,7 @@ package ATMConstants is
     -- Firmware version reported to user
     ------------------------------------------------------
 
-	constant USER_VERSION : std_logic_vector(31 downto 0) := x"0000000b";
+	constant USER_VERSION : std_logic_vector(31 downto 0) := x"0000000c";
 
     --CSR register read / write directions
     type CSR_ARRAY_t is array(natural range <>) of natural;
