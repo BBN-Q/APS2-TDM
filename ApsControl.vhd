@@ -38,6 +38,7 @@ port
   -- Clocks
   CLK_200MHZ     : in   std_logic;  -- Free Running Control Clock.  Required for MGTP initialization
   CLK_125MHZ     : out  std_logic;  -- 125 MHz MGTP synchronous clock available for user code
+  mmcm_locked    : out  std_logic;  -- SFP PCS/PCM core locked to 125MHz reference
 
   -- MGTP Connections
   gtrefclk_p     : in std_logic;    -- 125 MHz reference
@@ -251,6 +252,7 @@ begin
     independent_clock_bufg => CLK_200MHZ,
     userclk_out          => userclk,
     userclk2_out         => userclk2,
+    mmcm_locked_out      => mmcm_locked,
 
     -- Connect to the GMII on the MAC
     gmii_txd             => gmii_txd_int,

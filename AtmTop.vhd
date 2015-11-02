@@ -139,6 +139,7 @@ signal RefLocked_s  : std_logic;
 signal RefLocked_d  : std_logic;
 signal SysLocked    : std_logic;
 signal SfpTimer     : std_logic_vector(24 downto 0);
+signal mgt_locked   : std_logic;
 
 signal LedToggle : std_logic_vector(27 downto 0);
 signal LedRed : std_logic;
@@ -374,9 +375,11 @@ begin
 	port map ( reset => not(FPGA_RESETL), clk => CLK_125MHZ, i_data => RefLocked, o_data => RefLocked_s );
 
 	-- need to reset SYS_MMCM on rising or falling edge of RefLocked
-	sys_mmcm_reset : process( CLK_125MHZ )
+	sys_mmcm_reset : process( mgt_locked, CLK_125MHZ )
 	begin
-		if rising_edge(CLK_125MHZ) then
+		if mgt_locked = '0' then
+			SysClkReset <= '1';
+		elsif rising_edge(CLK_125MHZ) then
 			RefLocked_d <= RefLocked_s;
 			if (RefLocked_d xor RefLocked_s) = '1' then
 				SysClkReset <= '1';
@@ -442,6 +445,7 @@ begin
 		-- Clocks
 		CLK_200MHZ           => CLK_200MHZ,
 		CLK_125MHZ           => CLK_125MHZ,
+		mmcm_locked          => mgt_locked,
 
 		-- MGTP Connections
 		gtrefclk_p           => gtrefclk_p,
