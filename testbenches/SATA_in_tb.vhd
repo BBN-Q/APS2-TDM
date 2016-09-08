@@ -11,13 +11,9 @@ end;
 
 architecture Behavioral of SATA_in_tb is
 
-	constant test_vec : std_logic_vector(31 downto 0) := b"01101101_11101101_01101111_00100101";
-
 	constant clk100_period: time := 10 ns;
 	constant clk200_period: time := 5 ns;
-	constant clk400_period: time := 5 ns;
-	constant clk_sata_period: time := 10.01 ns;
-	constant clk_sata_skew: time := 1 ns;
+	constant clk400_period: time := 2.5 ns;
 
 	signal clk_user, clk_sata     : std_logic := '0';
 	signal clk400_tdm, clk200_tdm, clk100_tdm : std_logic := '0';
@@ -31,12 +27,12 @@ architecture Behavioral of SATA_in_tb is
 
 	signal tdm_tx     : std_logic_vector(7 downto 0) := (others => '0');
 
-	signal tdm_next   : std_logic := '0';
-	signal tdm_locked : std_logic := '0';
-	signal tdm_err    : std_logic := '0';
-	signal tdm_ovfl   : std_logic := '0';
-	signal tdm_ready  : std_logic := '0';
-	signal tdm_rx     : std_logic_vector(7 downto 0) := (others => '0');
+	signal aps2_next   : std_logic := '0';
+	signal aps2_locked : std_logic := '0';
+	signal aps2_err    : std_logic := '0';
+	signal aps2_ovfl   : std_logic := '0';
+	signal aps2_ready  : std_logic := '0';
+	signal aps2_rx     : std_logic_vector(7 downto 0) := (others => '0');
 
 	signal tdm_tx_valid : std_logic := '0';
 	signal tdm_tx_afull : std_logic := '0';
@@ -44,15 +40,17 @@ architecture Behavioral of SATA_in_tb is
 begin
 
 	clk_user   <= not clk_user after clk100_period / 2 when not stop_the_clock;
-	clk_sata   <= not clk_sata after clk_sata_period / 2 when not stop_the_clock;
 	clk100_tdm <= not clk100_tdm after clk100_period / 2 when not stop_the_clock;
 	clk200_tdm <= not clk200_tdm after clk200_period / 2 when not stop_the_clock;
 	clk400_tdm <= not clk400_tdm after clk400_period / 2 when not stop_the_clock;
 
+	-- Perpetually flush the buffer
+	aps2_next  <= aps2_ready;
+
 	trig_in_logic_uut : entity work.TriggerInLogic
 	port map
 	(
-		USER_CLK   =>  clk_user,   -- Clock for the output side of the FIFO
+		USER_CLK   =>  clk_user,     -- Clock for the output side of the FIFO
 		CLK_200MHZ =>  clk200_tdm,   -- Delay calibration clock
 		RESET      =>  rst_tdm,      -- Asynchronous reset for the trigger logic and FIFO
 
@@ -61,13 +59,13 @@ begin
 		TRIG_DATP  =>  twisted_pair_b_p,  -- 800 Mbps Serial Data
 		TRIG_DATN  =>  twisted_pair_b_n,
 
-		TRIG_NEXT  =>  tdm_next,  -- Advance the FIFO output to the next trigger, must be synchronous to USER_CLK
+		TRIG_NEXT  =>  aps2_next,  -- Advance the FIFO output to the next trigger, must be synchronous to USER_CLK
 
-		TRIG_LOCKED => tdm_locked, -- Set when locked and aligned to the received trigger clock, synchronous to USER_CLK
-		TRIG_ERR    => tdm_err,    -- Set if unaligned clock received after clock locked and aligned, synchronous to USER_CLK
-		TRIG_RX     => tdm_rx,     -- Current trigger value, synchronous to USER_CLK
-		TRIG_OVFL   => tdm_ovfl,   -- Set if trigger FIFO overflows, cleared by RESET, synchronous to USER_CLK
-		TRIG_READY  => tdm_ready   -- FIFO output valid flag, set when TRIG_RX is valid, synchronous to USER_CLK
+		TRIG_LOCKED => aps2_locked, -- Set when locked and aligned to the received trigger clock, synchronous to USER_CLK
+		TRIG_ERR    => aps2_err,    -- Set if unaligned clock received after clock locked and aligned, synchronous to USER_CLK
+		TRIG_RX     => aps2_rx,     -- Current trigger value, synchronous to USER_CLK
+		TRIG_OVFL   => aps2_ovfl,   -- Set if trigger FIFO overflows, cleared by RESET, synchronous to USER_CLK
+		TRIG_READY  => aps2_ready   -- FIFO output valid flag, set when TRIG_RX is valid, synchronous to USER_CLK
 	);
 
 	trig_out_logic_uut : entity work.TriggerOutLogic
@@ -95,20 +93,23 @@ begin
 
 		-- Give some time for reset
 		rst_tdm <= '1';
-		wait for 10 ns;
+		wait for 30 ns;
 		rst_tdm <= '0';
-		wait until tdm_locked = '1';
+		wait until aps2_locked = '1';
+		wait for 500 ns;
 
 		-- Throw some data through the twisted pairs
 		for i in 1 to 4 loop
 			wait until rising_edge(clk_user);
 			tdm_tx <= std_logic_vector(to_unsigned(i, 8));
 			tdm_tx_valid <= '1';
-
 		end loop;
-		tdm_tx_valid <= '0';
-		wait for 500 ns;
 
+		-- Turn off transmission and wait.
+		tdm_tx_valid <= '0';
+		wait for 1000 ns;
+
+		-- Stop
 		stop_the_clock <= true;
 		wait;
 
