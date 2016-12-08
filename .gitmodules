@@ -1,0 +1,6 @@
+[submodule "deps/VHDL-Components"]
+	path = deps/VHDL-Components
+	url = https://github.com/BBN-Q/VHDL-Components.git
+[submodule "deps/APS2-Comms"]
+	path = deps/APS2-Comms
+	url = https://github.com/BBN-Q/APS2-Comms.git
