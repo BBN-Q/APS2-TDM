@@ -20,7 +20,7 @@ port (
 	SATA_status        : in std_logic_vector(31 downto 0);
 	uptime_seconds     : in std_logic_vector(31 downto 0);
 	uptime_nanoseconds : in std_logic_vector(31 downto 0);
-	aps2_version       : in std_logic_vector(31 downto 0);
+	tdm_version        : in std_logic_vector(31 downto 0);
 	temperature        : in std_logic_vector(31 downto 0);
 	git_sha1           : in std_logic_vector(31 downto 0);
 	build_timestamp    : in std_logic_vector(31 downto 0);
@@ -81,7 +81,7 @@ begin
 			regs(18) <= SATA_status;
 			regs(20) <= uptime_seconds;
 			regs(21) <= uptime_nanoseconds;
-			regs(22) <= aps2_version;
+			regs(22) <= tdm_version;
 			regs(23) <= temperature;
 			regs(24) <= git_sha1;
 			regs(25) <= build_timestamp;

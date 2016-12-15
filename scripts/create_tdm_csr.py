@@ -34,7 +34,7 @@ if __name__ == '__main__':
 				Register(18, "SATA_status", "read"),
 				Register(20, "uptime_seconds", "read"),
 				Register(21, "uptime_nanoseconds", "read"),
-				Register(22, "aps2_version", "read"),
+				Register(22, "tdm_version", "read"),
 				Register(23, "temperature", "read"), # 11-0
 				Register(24, "git_sha1", "read"),
 				Register(25, "build_timestamp", "read")
