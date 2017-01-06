@@ -1,53 +1,65 @@
-# create project
+##################################################################
+# Tcl script to create the TDM HDL Vivado project for implementation to bitfile
+#
+# Usage: at the Tcl console manually set the argv to set the PROJECT_DIR and PROJECT_NAME and
+# then source this file. E.g.
+#
+# set argv [list "/home/cryan/Programming/FPGA" "TDM-impl"] or
+# or  set argv [list "C:/Users/qlab/Documents/Xilinx Projects/" "TDM-impl"]
+# source create_project.tcl
+#
+# from Vivado batch mode use the -tclargs to pass argv
+# vivado -mode batch -source create_project.tcl -tclargs "/home/cryan/Programming/FPGA" "TDM-impl"
+#
+##################################################################
 
-###########################################################
+#parse arguments
+set PROJECT_DIR [lindex $argv 0]
+set PROJECT_NAME [lindex $argv 1]
+set FIXED_IP [lindex $argv 2]
 
-# Update these for the local machine
+# figure out the script path
+set SCRIPT_PATH [file normalize [info script]]
+set REPO_PATH [file dirname $SCRIPT_PATH]/../
 
-set project_dir "C:/Users/qlab/Documents/Xilinx Projects"
-set project_name "APS2-Trigger"
+create_project -force $PROJECT_NAME $PROJECT_DIR/$PROJECT_NAME -part xc7a200tfbg676-2
 
-############################################################
+# set project properties
+set obj [get_projects TDM-impl]
+set_property "corecontainer.enable" "1" $obj
+set_property "default_lib" "xil_defaultlib" $obj
+set_property "ip_cache_permissions" "disable" $obj
+set_property "sim.ip.auto_export_scripts" "1" $obj
+set_property "simulator_language" "Mixed" $obj
+set_property "target_language" "VHDL" $obj
+set_property "xpm_libraries" "XPM_CDC XPM_MEMORY" $obj
 
-set scriptPath [file normalize [info script]]
-set source_dir [file dirname $scriptPath]/../
-
-create_project -force $project_name $project_dir/$project_name -part xc7a200tfbg676-2
-set_property target_language VHDL [current_project]
-
-# add VHDL and NGC sources
-add_files -norecurse $source_dir $source_dir/UDP
-set ngc_srcs [glob $source_dir/ip/*.ngc]
-add_files -norecurse $ngc_srcs
-
-#testbenches
-add_files -norecurse -fileset sim_1 $source_dir/testbenches
+# add VHDL sources
+add_files -norecurse $REPO_PATH/src
 
 # constraints
-add_files -fileset constrs_1 -norecurse $source_dir/constraints
-set_property target_constrs_file $source_dir/constraints/ATM_B206.xdc [current_fileset -constrset]
+add_files -fileset constrs_1 -norecurse $REPO_PATH/constraints
+set_property target_constrs_file $REPO_PATH/constraints/ATM_B206.xdc [current_fileset -constrset]
 
 # ip cores
-set ip_srcs [glob $source_dir/ip/*.xci]
+set ip_srcs [glob $REPO_PATH/src/ip/*.xci]
 import_ip $ip_srcs
-#Now the TEMAC from 2014.4
-import_files $SOURCE_DIR/ip/GIGE_MAC/GIGE_MAC.xci
 
-#Memory BD
-source $source_dir/scripts/Memory.tcl
+# APS2-Comms files
+source $REPO_PATH/deps/APS2-Comms/scripts/add_verilog_deps.tcl
+source $REPO_PATH/deps/APS2-Comms/scripts/add_comblocks_files.tcl
+source $REPO_PATH/deps/APS2-Comms/scripts/add_files_to_project.tcl
+
+# main BD
+source $REPO_PATH/src/bd/main_bd.tcl -quiet
 regenerate_bd_layout
 validate_bd_design
 save_bd_design
-generate_target all [get_files  $project_dir/$project_name/$project_name.srcs/sources_1/bd/Memory/Memory.bd]
-close_bd_design [get_bd_designs Memory]
-#make it out-of-context to speed up synthesis
-create_fileset -blockset -define_from Memory Memory
+generate_target all [get_files main_bd.bd] -quiet
+close_bd_design [get_bd_designs main_bd]
 
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
-
-# simulation generics
-set_property generic "APS_REPO_PATH=\"$source_dir\"" [get_filesets sim_1]
 
 #Get headerless bit file output
 set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]
