@@ -39,7 +39,7 @@ entity TriggerOutLogic is
 port
 (
   USER_CLK   : in  std_logic;  -- Clock for the output side of the FIFO
-  
+
   -- These clocks are usually generated from an MMCM driven by the CFG_CCLK.
   CLK_100MHZ : in std_logic;      -- 100 MHz trigger output serial clock, must be from same MMCM as CLK_400MHZ
   CLK_400MHZ : in std_logic;      -- 400 MHz DDR serial output clock
@@ -112,7 +112,7 @@ begin
     io_reset             => RESET
   );
 
-  -- One level of input data pipelining to allow for easier routing  
+  -- One level of input data pipelining to allow for easier routing
   process(USER_CLK, RESET)
   begin
     if RESET = '1' then
@@ -124,7 +124,7 @@ begin
     end if;
   end process;
 
-  -- One level of output data pipelining to allow for easier routing  
+  -- One level of output data pipelining to allow for easier routing
   process(CLK_100MHZ, RESET)
   begin
     if RESET = '1' then
@@ -161,5 +161,5 @@ begin
     empty       => TrigEmpty,
     prog_full   => TRIG_AFULL
   );
-  
+
 end behavior;
