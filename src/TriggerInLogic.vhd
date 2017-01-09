@@ -584,10 +584,10 @@ begin
 
   -- sync control signals onto USER_CLK
   sync_ovfl : entity work.synchronizer
-  port map ( reset => RESET, clk => USER_CLK, i_data => TrigOvfl, o_data => TRIG_OVFL);
+  port map ( rst => RESET, clk => USER_CLK, data_in => TrigOvfl, data_out => TRIG_OVFL);
   sync_locked : entity work.synchronizer
-  port map ( reset => RESET, clk => USER_CLK, i_data => TrigDone, o_data => TRIG_LOCKED);
+  port map ( rst => RESET, clk => USER_CLK, data_in => TrigDone, data_out => TRIG_LOCKED);
   sync_err : entity work.synchronizer
-  port map ( reset => RESET, clk => USER_CLK, i_data => TrigErr, o_data => TRIG_ERR);
+  port map ( rst => RESET, clk => USER_CLK, data_in => TrigErr, data_out => TRIG_ERR);
 
 end behavior;
