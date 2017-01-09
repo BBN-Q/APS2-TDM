@@ -21,7 +21,7 @@ package AtmIPCores is
 	component SYS_MMCM
 	port
 	 (-- Clock in ports
-	  REF_100MHZ_IN           : in     std_logic;
+	  REF_125MHZ_IN           : in     std_logic;
 	  CLK_125MHZ_IN           : in     std_logic;
 	  CLK_IN_SEL           : in     std_logic;
 	  -- Clock out ports
@@ -117,7 +117,7 @@ package AtmIPCores is
 	end component;
 	ATTRIBUTE SYN_BLACK_BOX OF SEROUT8 : COMPONENT IS TRUE;
 	ATTRIBUTE BLACK_BOX_PAD_PIN OF SEROUT8 : COMPONENT IS "data_out_to_pins_p[0:0],data_out_to_pins_n[0:0],clk_in,clk_div_in,data_out_from_device[7:0],io_reset";
-	
+
 	COMPONENT SFP_GIGE
     PORT (
 		gtrefclk_p : IN STD_LOGIC;

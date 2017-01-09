@@ -37,11 +37,16 @@ create_clock -period 10.000 -name TAUX_CLK -waveform {0.000 5.000} [get_pins TIL
 # ostrich-style timing groups
 set_clock_groups -asynchronous \
 -group [get_clocks -of_objects [get_pins CK0/CLK_100MHZ]] \
--group [get_clocks -of_object [get_pins CK0/CLK_100MHZ_IN]] \
+-group [get_clocks -of_object [get_pins CK0/CLK_125MHZ_IN]] \
 -group [get_clocks -include_generated_clocks cfg_clk] \
 -group [get_clocks -of_objects [get_pins TIL1/CK1/TRIG_100MHZ]]
 
-set_clock_groups -physically_exclusive -group [get_clocks -include_generated_clocks -of_objects [get_pins CK0/REF_100MHZ_IN]] -group [get_clocks -include_generated_clocks -of_objects [get_pins CK0/CLK_125MHZ_IN]]
+# only look at one possible timing for the 125 MHz clock mux into the sys_clk_mmcm
+# see https://www.xilinx.com/support/answers/56271.html
+# and https://forums.xilinx.com/t5/Timing-Analysis/Vivado-Timing-Issue-When-Using-MMCM-With-2-Input-Clocks/td-p/422597
+set_case_analysis 1 [get_pins CK0/CLK_IN_SEL]
+
+set_clock_groups -physically_exclusive -group [get_clocks -include_generated_clocks -of_objects [get_pins CK0/REF_125MHZ_IN]] -group [get_clocks -include_generated_clocks -of_objects [get_pins CK0/CLK_125MHZ_IN]]
 
 # dedicated clock routing for 10MHz reference clock
 set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets CK1/inst/CLK_REF_REF_MMCM]

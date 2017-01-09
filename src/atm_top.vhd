@@ -24,8 +24,8 @@ port
 	fpga_resetl : in  std_logic;  -- Global reset from config FPGA
 
 	-- Temp Diode Pins
-	vp_in      : in  std_logic;
-	vn_in      : in  std_logic;
+	-- vp : in  std_logic;
+	-- vn : in  std_logic;
 
 	-- Config Bus Connections
 	cfg_clk   : in  std_logic;  -- 100 MHZ clock from the Config CPLD
@@ -96,7 +96,7 @@ architecture behavior of ATM_top is
 	signal clk_125 : std_logic;
 	signal clk_200 : std_logic;
 	signal clk_400 : std_logic;
-	signal ref_100 : std_logic;
+	signal ref_125 : std_logic;
 
 	signal cfg_clk_mmcm_locked : std_logic;
 	signal ref_locked          : std_logic;
@@ -183,7 +183,7 @@ begin
 		CLK_REF => ref_fpga,
 
 		-- clock out ports
-		CLK_100MHZ => ref_100,
+		CLK_100MHZ => ref_125,
 
 		-- status and control signals
 		RESET      => not fpga_resetl,
@@ -196,9 +196,9 @@ begin
 	port map
 	(
 		-- Clock in ports
-		REF_100MHZ_IN => ref_100,
-		CLK_125MHZ_IN    => clk_125,
-		CLK_IN_SEL    => ref_locked, -- choose ref_100 when HIGH
+		REF_125MHZ_IN => ref_125,
+		CLK_125MHZ_IN => clk_125,
+		CLK_IN_SEL    => ref_locked, -- choose ref_125 when HIGH
 
 		-- Clock out ports
 		CLK_100MHZ    => clk_100,
@@ -354,7 +354,7 @@ begin
 	-- Send output status to LEDs for checking
 	-- TODO
 	led <= (others => '0');
-
+	dbg <= (others => '0');
 -------------------------------------------------------------------------------
 -- SATA connections
 -------------------------------------------------------------------------------
@@ -423,10 +423,10 @@ begin
 			TRIG_WR    => TrigWr(i),
 			TRIG_AFULL => TrigOutFull(i),
 
-			TRIG_CLKP  => TRGCLK_OUTP(i),
-			TRIG_CLKN  => TRGCLK_OUTN(i),
-			TRIG_DATP  => TRGDAT_OUTP(i),
-			TRIG_DATN  => TRGDAT_OUTN(i)
+			TRIG_CLKP  => trgclk_outp(i),
+			TRIG_CLKN  => trgclk_outn(i),
+			TRIG_DATP  => trgdat_outp(i),
+			TRIG_DATN  => trgdat_outn(i)
 		);
 	end generate;
 
@@ -438,10 +438,10 @@ begin
 		CLK_200MHZ => clk_200,
 		RESET      => rst_sata,
 
-		TRIG_CLKP  => TRIG_CTRLP(0),
-		TRIG_CLKN  => TRIG_CTRLN(0),
-		TRIG_DATP  => TRIG_CTRLP(1),
-		TRIG_DATN  => TRIG_CTRLN(1),
+		TRIG_CLKP  => trig_ctrlp(0),
+		TRIG_CLKN  => trig_ctrln(0),
+		TRIG_DATP  => trig_ctrlp(1),
+		TRIG_DATN  => trig_ctrln(1),
 
 		TRIG_NEXT  => TrigInRd,  -- Always read data when it is available
 
