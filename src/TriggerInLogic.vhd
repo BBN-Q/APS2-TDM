@@ -387,27 +387,29 @@ begin
 
       case SlipCnt(2 downto 0) is
         when "000" => SlipData <= DataB(7 downto 0);
-        when "001" => SlipData <= DataB(6 downto 0) & DataA(7);          
-        when "010" => SlipData <= DataB(5 downto 0) & DataA(7 downto 6); 
-        when "011" => SlipData <= DataB(4 downto 0) & DataA(7 downto 5); 
-        when "100" => SlipData <= DataB(3 downto 0) & DataA(7 downto 4); 
-        when "101" => SlipData <= DataB(2 downto 0) & DataA(7 downto 3); 
-        when "110" => SlipData <= DataB(1 downto 0) & DataA(7 downto 2); 
-        when "111" => SlipData <= DataB(0)          & DataA(7 downto 1); 
+        when "001" => SlipData <= DataB(6 downto 0) & DataA(7);
+        when "010" => SlipData <= DataB(5 downto 0) & DataA(7 downto 6);
+        when "011" => SlipData <= DataB(4 downto 0) & DataA(7 downto 5);
+        when "100" => SlipData <= DataB(3 downto 0) & DataA(7 downto 4);
+        when "101" => SlipData <= DataB(2 downto 0) & DataA(7 downto 3);
+        when "110" => SlipData <= DataB(1 downto 0) & DataA(7 downto 2);
+        when "111" => SlipData <= DataB(0)          & DataA(7 downto 1);
+        when others => null;
       end case;
-      
+
       ClkA <= SerClk;
       ClkB <= ClkA;
-  
+
       case SlipCnt(2 downto 0) is
-        when "000" => SlipClk <= ClkB(7 downto 0);                    
-        when "001" => SlipClk <= ClkB(6 downto 0) & ClkA(7);         
+        when "000" => SlipClk <= ClkB(7 downto 0);
+        when "001" => SlipClk <= ClkB(6 downto 0) & ClkA(7);
         when "010" => SlipClk <= ClkB(5 downto 0) & ClkA(7 downto 6);
         when "011" => SlipClk <= ClkB(4 downto 0) & ClkA(7 downto 5);
         when "100" => SlipClk <= ClkB(3 downto 0) & ClkA(7 downto 4);
         when "101" => SlipClk <= ClkB(2 downto 0) & ClkA(7 downto 3);
         when "110" => SlipClk <= ClkB(1 downto 0) & ClkA(7 downto 2);
         when "111" => SlipClk <= ClkB(0)          & ClkA(7 downto 1);
+        when others => null;
       end case;
 
       -- Calculate difference between current tap setting and start of stable region
@@ -527,7 +529,7 @@ begin
               TrigState <= TRIG_DONE;
             end if;
 
-            -- Retry if no alignment after 8 slips            
+            -- Retry if no alignment after 8 slips
             if SlipCnt(3) = '1' then
               SlipCnt(3) <= '0';
               FirstFound <= '0';
