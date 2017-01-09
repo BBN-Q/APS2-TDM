@@ -102,14 +102,6 @@ signal ClkB  : std_logic_vector(7 downto 0);
 signal SlipData : std_logic_vector(7 downto 0);
 signal SlipClk : std_logic_vector(7 downto 0);
 
-attribute MARK_DEBUG : string;
-attribute MARK_DEBUG of SerClk : signal is "true";
-attribute MARK_DEBUG of CurDly : signal is "true";
-attribute MARK_DEBUG of TrigLocked : signal is "true";
-attribute MARK_DEBUG of DlyVal : signal is "true";
-attribute MARK_DEBUG of DbgTrigState : signal is "true";
-attribute MARK_DEBUG of SerDat : signal is "true";
-
 begin
 
   DbgTrigState <= "000" when TrigState = TRIG_START

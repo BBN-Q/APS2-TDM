@@ -74,10 +74,6 @@ signal TrigEmpty  : STD_LOGIC;
 signal TrigRd     : STD_LOGIC;
 signal TrigDat    : std_logic_vector(7 downto 0);
 
-attribute MARK_DEBUG : string;
-attribute MARK_DEBUG of SerTrigOut : signal is "true";
-attribute MARK_DEBUG of TrigEmpty : signal is "true";
-
 begin
 
   -- Connect serial output vectors to output pins
