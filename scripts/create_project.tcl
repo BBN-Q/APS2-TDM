@@ -39,7 +39,7 @@ add_files -norecurse $REPO_PATH/src
 
 # constraints
 add_files -fileset constrs_1 -norecurse $REPO_PATH/constraints
-set_property target_constrs_file $REPO_PATH/constraints/ATM_B206.xdc [current_fileset -constrset]
+set_property target_constrs_file $REPO_PATH/constraints/timing.xdc [current_fileset -constrset]
 
 # ip cores
 set ip_srcs [glob $REPO_PATH/src/ip/*.xci]
@@ -49,6 +49,9 @@ import_ip $ip_srcs
 source $REPO_PATH/deps/APS2-Comms/scripts/add_verilog_deps.tcl
 source $REPO_PATH/deps/APS2-Comms/scripts/add_comblocks_files.tcl
 source $REPO_PATH/deps/APS2-Comms/scripts/add_files_to_project.tcl
+
+# has timing specific to aps comms bd
+remove_files -fileset constrs_1 $REPO_PATH/deps/APS2-Comms//constraints/timing.xdc
 
 # main BD
 source $REPO_PATH/src/bd/main_bd.tcl -quiet
