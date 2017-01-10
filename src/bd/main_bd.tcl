@@ -168,6 +168,9 @@ proc create_root_design { parentCell } {
   set build_timestamp [ create_bd_port -dir I -from 31 -to 0 build_timestamp ]
   set cfg_act [ create_bd_port -dir I cfg_act ]
   set cfg_clk [ create_bd_port -dir I -type clk cfg_clk ]
+  set_property -dict [ list \
+CONFIG.ASSOCIATED_RESET {} \
+ ] $cfg_clk
   set cfg_err [ create_bd_port -dir I cfg_err ]
   set cfg_rdy [ create_bd_port -dir I cfg_rdy ]
   set cfg_reader_done [ create_bd_port -dir O cfg_reader_done ]
@@ -178,7 +181,7 @@ CONFIG.ASSOCIATED_RESET {rst_udp_responder:rst_comblock:rst_eth_mac} \
  ] $clk_125
   set clk_axi [ create_bd_port -dir I -type clk clk_axi ]
   set_property -dict [ list \
-CONFIG.ASSOCIATED_RESET {rstn_axi:rst_cfg_reader:rst_tcp_bridge} \
+CONFIG.ASSOCIATED_RESET {rstn_axi:rst_cfg_reader:rst_tcp_bridge:rst_cpld_bridge:rst_cpld_bridge} \
  ] $clk_axi
   set clk_ref_200 [ create_bd_port -dir I -type clk clk_ref_200 ]
   set comms_active [ create_bd_port -dir O comms_active ]
@@ -237,6 +240,9 @@ CONFIG.POLARITY {ACTIVE_HIGH} \
 
   # Create instance: CPLD_bridge_0, and set properties
   set CPLD_bridge_0 [ create_bd_cell -type ip -vlnv bbn.com:bbn:CPLD_bridge:1.0 CPLD_bridge_0 ]
+  set_property -dict [ list \
+CONFIG.BOARD_TYPE {"00000001"} \
+ ] $CPLD_bridge_0
 
   # Create instance: TDM_CSR_0, and set properties
   set block_name TDM_CSR
@@ -249,11 +255,6 @@ CONFIG.POLARITY {ACTIVE_HIGH} \
      return 1
    }
   
-  set_property -dict [ list \
-CONFIG.NUM_READ_OUTSTANDING {1} \
-CONFIG.NUM_WRITE_OUTSTANDING {1} \
- ] [get_bd_intf_pins /TDM_CSR_0/s_axi]
-
   # Create instance: UDP_responder_0, and set properties
   set block_name UDP_responder
   set block_cell_name UDP_responder_0
@@ -415,18 +416,18 @@ preplace port rst_cpld_bridge -pg 1 -y 90 -defaultsOSRD
 preplace port cfg_err -pg 1 -y 40 -defaultsOSRD
 preplace port sfp_mgt_clk -pg 1 -y 1080 -defaultsOSRD
 preplace port rst_udp_responder -pg 1 -y 180 -defaultsOSRD
+preplace port rst_eth_mac -pg 1 -y 630 -defaultsOSRD
 preplace port rst_tcp_bridge -pg 1 -y 580 -defaultsOSRD
-preplace port rst_eth_mac -pg 1 -y 620 -defaultsOSRD
-preplace port cfg_act -pg 1 -y 0 -defaultsOSRD
-preplace port cfg_clk -pg 1 -y 20 -defaultsOSRD
+preplace port cfg_act -pg 1 -y 20 -defaultsOSRD
+preplace port cfg_clk -pg 1 -y 30 -defaultsOSRD
 preplace port cfg_reader_done -pg 1 -y 500 -defaultsOSRD
-preplace port rstn_axi -pg 1 -y 1590 -defaultsOSRD
 preplace port rst_pcs_pma -pg 1 -y 1180 -defaultsOSRD
 preplace port fpga_rdyl -pg 1 -y 150 -defaultsOSRD
+preplace port rstn_axi -pg 1 -y 1590 -defaultsOSRD
 preplace port sfp -pg 1 -y 950 -defaultsOSRD
-preplace port stat_oel -pg 1 -y 170 -defaultsOSRD
-preplace port pcs_pma_mmcm_locked -pg 1 -y 1130 -defaultsOSRD
 preplace port comms_active -pg 1 -y 560 -defaultsOSRD
+preplace port pcs_pma_mmcm_locked -pg 1 -y 1130 -defaultsOSRD
+preplace port stat_oel -pg 1 -y 170 -defaultsOSRD
 preplace port fpga_cmdl -pg 1 -y 130 -defaultsOSRD
 preplace port rst_cfg_reader -pg 1 -y 480 -defaultsOSRD
 preplace port pcs_pma_an_restart_config -pg 1 -y 1160 -defaultsOSRD
@@ -434,112 +435,112 @@ preplace port clk_ref_200 -pg 1 -y 1100 -defaultsOSRD
 preplace port clk_125 -pg 1 -y 590 -defaultsOSRD
 preplace port rst_comblock -pg 1 -y 550 -defaultsOSRD
 preplace port clk_axi -pg 1 -y 1570 -defaultsOSRD
-preplace port cfg_rdy -pg 1 -y 600 -defaultsOSRD
+preplace port cfg_rdy -pg 1 -y 610 -defaultsOSRD
 preplace portBus git_sha1 -pg 1 -y 1530 -defaultsOSRD
-preplace portBus build_timestamp -pg 1 -y 1550 -defaultsOSRD
 preplace portBus ifg_delay -pg 1 -y 640 -defaultsOSRD
+preplace portBus build_timestamp -pg 1 -y 1550 -defaultsOSRD
 preplace portBus tdm_version -pg 1 -y 1490 -defaultsOSRD
-preplace portBus trigger_interval -pg 1 -y 1510 -defaultsOSRD
 preplace portBus temperature -pg 1 -y 1510 -defaultsOSRD
 preplace portBus gateway_ip_addr -pg 1 -y 330 -defaultsOSRD
+preplace portBus trigger_interval -pg 1 -y 1510 -defaultsOSRD
 preplace portBus pcs_pma_status_vector -pg 1 -y 1190 -defaultsOSRD
-preplace portBus control -pg 1 -y 1490 -defaultsOSRD
-preplace portBus uptime_nanoseconds -pg 1 -y 1470 -defaultsOSRD
 preplace portBus uptime_seconds -pg 1 -y 1450 -defaultsOSRD
+preplace portBus uptime_nanoseconds -pg 1 -y 1470 -defaultsOSRD
 preplace portBus tcp_port -pg 1 -y 660 -defaultsOSRD
-preplace portBus SATA_status -pg 1 -y 1430 -defaultsOSRD
+preplace portBus control -pg 1 -y 1490 -defaultsOSRD
 preplace portBus subnet_mask -pg 1 -y 310 -defaultsOSRD
 preplace portBus pcs_pma_configuration_vector -pg 1 -y 1120 -defaultsOSRD
 preplace portBus pcs_pma_an_adv_config_vector -pg 1 -y 1140 -defaultsOSRD
+preplace portBus SATA_status -pg 1 -y 1430 -defaultsOSRD
 preplace portBus udp_port -pg 1 -y 350 -defaultsOSRD
-preplace portBus resets -pg 1 -y 1470 -defaultsOSRD
 preplace portBus trigger_word -pg 1 -y 1410 -defaultsOSRD
+preplace portBus resets -pg 1 -y 1470 -defaultsOSRD
 preplace portBus cfgd -pg 1 -y 110 -defaultsOSRD
-preplace inst TDM_CSR_0 -pg 1 -lvl 5 -y 1490 -defaultsOSRD
 preplace inst tcp_bridge_0 -pg 1 -lvl 2 -y 540 -defaultsOSRD
 preplace inst UDP_responder_0 -pg 1 -lvl 2 -y 200 -defaultsOSRD
+preplace inst TDM_CSR_0 -pg 1 -lvl 5 -y 1490 -defaultsOSRD
 preplace inst smartconnect_0 -pg 1 -lvl 4 -y 990 -defaultsOSRD
 preplace inst eth_mac_1g_fifo_wrapper_0 -pg 1 -lvl 4 -y 750 -defaultsOSRD
-preplace inst eprom_cfg_reader_0 -pg 1 -lvl 1 -y 450 -defaultsOSRD
 preplace inst com5402_wrapper_0 -pg 1 -lvl 3 -y 300 -defaultsOSRD
+preplace inst eprom_cfg_reader_0 -pg 1 -lvl 1 -y 450 -defaultsOSRD
 preplace inst axi_datamover_0 -pg 1 -lvl 1 -y 850 -defaultsOSRD
 preplace inst CPLD_bridge_0 -pg 1 -lvl 5 -y 130 -defaultsOSRD
 preplace inst gig_ethernet_pcs_pma_0 -pg 1 -lvl 5 -y 1130 -defaultsOSRD
-preplace netloc rx_rst_1 1 0 4 20J 630 520J 780 NJ 780 1610
+preplace netloc rx_rst_1 1 0 4 NJ 630 530J 780 NJ 780 1590
 preplace netloc CPLD_bridge_0_fpga_rdyl 1 5 1 NJ
+preplace netloc tcp_bridge_0_cpld_rx 1 0 3 50 700 NJ 700 1010
 preplace netloc subnet_mask_1 1 0 3 NJ 310 NJ 310 NJ
-preplace netloc tcp_bridge_0_cpld_rx 1 0 3 70 550 530J 410 1020
-preplace netloc eprom_cfg_reader_0_ip_addr 1 1 2 500 320 1050J
-preplace netloc com5402_wrapper_0_udp_rx 1 1 3 660 60 NJ 60 1540
-preplace netloc tcp_bridge_0_S2MM 1 0 3 70 690 NJ 690 1030
-preplace netloc com5402_wrapper_0_udp_tx_ack 1 1 3 640 70 NJ 70 1570
+preplace netloc eprom_cfg_reader_0_ip_addr 1 1 2 520 320 1080J
+preplace netloc com5402_wrapper_0_udp_rx 1 1 3 660 80 NJ 80 1540
+preplace netloc tcp_bridge_0_S2MM 1 0 3 60 690 NJ 690 1020
+preplace netloc com5402_wrapper_0_udp_tx_ack 1 1 3 630 790 NJ 790 1560
 preplace netloc rst_1 1 0 1 NJ
 preplace netloc gig_ethernet_pcs_pma_0_mmcm_locked_out 1 5 1 NJ
 preplace netloc configuration_vector_1 1 0 5 NJ 1120 NJ 1120 NJ 1120 NJ 1120 NJ
 preplace netloc CPLD_bridge_0_stat_oel 1 5 1 NJ
 preplace netloc rst_2 1 0 2 NJ 180 NJ
-preplace netloc cfg_clk_1 1 0 5 30J 10 NJ 10 NJ 10 NJ 10 2000J
+preplace netloc cfg_clk_1 1 0 5 NJ 30 NJ 30 NJ 30 NJ 30 1980J
 preplace netloc rst_3 1 0 2 NJ 580 NJ
-preplace netloc UDP_responder_0_udp_tx 1 2 1 1070
-preplace netloc rst_4 1 0 5 NJ 90 NJ 90 1040J 100 NJ 100 1970J
-preplace netloc cfg_rdy_1 1 0 5 NJ 600 530J 750 NJ 750 1600J 150 NJ
-preplace netloc CPLD_bridge_0_tx 1 0 6 60 -10 NJ -10 NJ -10 NJ -10 NJ -10 2400
-preplace netloc eprom_cfg_reader_0_done 1 1 5 560J 710 1130J 500 NJ 500 NJ 500 NJ
+preplace netloc UDP_responder_0_udp_tx 1 2 1 1100
+preplace netloc rst_4 1 0 5 NJ 90 NJ 90 1100J 100 NJ 100 1960J
+preplace netloc cfg_rdy_1 1 0 5 NJ 610 540J 740 NJ 740 1580J 150 NJ
+preplace netloc CPLD_bridge_0_tx 1 0 6 20 10 NJ 10 NJ 10 NJ 10 NJ 10 2390
+preplace netloc eprom_cfg_reader_0_done 1 1 5 500J 60 1090J 500 NJ 500 NJ 500 NJ
 preplace netloc gtrefclk_in_1 1 0 5 NJ 1080 NJ 1080 NJ 1080 NJ 1080 NJ
-preplace netloc com5402_wrapper_0_udp_rx_src_port 1 1 3 630 50 NJ 50 1580
 preplace netloc gig_ethernet_pcs_pma_0_sfp 1 5 1 NJ
+preplace netloc com5402_wrapper_0_udp_rx_src_port 1 1 3 620 720 NJ 720 1570
 preplace netloc uptime_nanoseconds_1 1 0 5 NJ 1470 NJ 1470 NJ 1470 NJ 1470 NJ
 preplace netloc an_adv_config_vector_1 1 0 5 NJ 1140 NJ 1140 NJ 1140 NJ 1140 NJ
-preplace netloc ifg_delay_1 1 0 4 NJ 640 490J 800 NJ 800 NJ
-preplace netloc axi_datamover_0_M_AXIS_S2MM_STS 1 1 1 570
-preplace netloc axi_datamover_0_M_AXIS_MM2S 1 1 1 540
-preplace netloc smartconnect_0_M00_AXI 1 4 1 1940
-preplace netloc com5402_wrapper_0_tcp_rx 1 1 3 600 40 NJ 40 1550
-preplace netloc axi_datamover_0_M_AXIS_MM2S_STS 1 1 1 550
-preplace netloc rst 1 0 3 30J 620 590 730 1090J
+preplace netloc ifg_delay_1 1 0 4 NJ 640 500J 800 NJ 800 NJ
+preplace netloc smartconnect_0_M00_AXI 1 4 1 1920
+preplace netloc axi_datamover_0_M_AXIS_MM2S 1 1 1 560
+preplace netloc axi_datamover_0_M_AXIS_S2MM_STS 1 1 1 580
+preplace netloc com5402_wrapper_0_tcp_rx 1 1 3 610 50 NJ 50 1550
+preplace netloc rst 1 0 3 NJ 550 600 360 1060J
 preplace netloc an_restart_config_1 1 0 5 NJ 1160 NJ 1160 NJ 1160 NJ 1160 NJ
 preplace netloc uptime_seconds_1 1 0 5 NJ 1450 NJ 1450 NJ 1450 NJ 1450 NJ
-preplace netloc axi_datamover_0_M_AXI_S2MM 1 1 3 N 810 NJ 810 1550J
-preplace netloc com5402_wrapper_0_udp_tx_nack 1 1 3 650 80 NJ 80 1560
+preplace netloc axi_datamover_0_M_AXIS_MM2S_STS 1 1 1 570
+preplace netloc com5402_wrapper_0_udp_tx_nack 1 1 3 660 730 NJ 730 1540
+preplace netloc axi_datamover_0_M_AXI_S2MM 1 1 3 N 810 NJ 810 1570J
 preplace netloc git_sha1_1 1 0 5 NJ 1530 NJ 1530 NJ 1530 NJ 1530 NJ
 preplace netloc SATA_status_1 1 0 5 NJ 1430 NJ 1430 NJ 1430 NJ 1430 NJ
-preplace netloc UDP_responder_0_dest_ip_addr 1 2 1 1070
+preplace netloc UDP_responder_0_dest_ip_addr 1 2 1 1030
 preplace netloc TDM_CSR_0_trigger_interval 1 5 1 NJ
-preplace netloc tcp_bridge_0_MM2S_CMD 1 0 3 50 670 NJ 670 1010
-preplace netloc eprom_cfg_reader_0_tx_out 1 1 1 590
+preplace netloc tcp_bridge_0_MM2S_CMD 1 0 3 40 680 NJ 680 1030
+preplace netloc eprom_cfg_reader_0_tx_out 1 1 1 550
 preplace netloc Net 1 5 1 NJ
-preplace netloc eprom_cfg_reader_0_mac_addr 1 1 2 580 720 1100J
-preplace netloc UDP_responder_0_rst_tcp 1 2 1 1080
-preplace netloc eth_mac_1g_fifo_wrapper_0_gmii 1 4 1 1950
+preplace netloc eprom_cfg_reader_0_mac_addr 1 1 2 530 340 1070J
+preplace netloc UDP_responder_0_rst_tcp 1 2 1 1050
+preplace netloc eth_mac_1g_fifo_wrapper_0_gmii 1 4 1 1930
 preplace netloc signal_detect_1 1 0 5 NJ 1200 NJ 1200 NJ 1200 NJ 1200 NJ
 preplace netloc build_timestamp_1 1 0 5 NJ 1550 NJ 1550 NJ 1550 NJ 1550 NJ
 preplace netloc TDM_CSR_0_control 1 5 1 NJ
 preplace netloc independent_clock_bufg_1 1 0 5 NJ 1100 NJ 1100 NJ 1100 NJ 1100 NJ
-preplace netloc tcp_bridge_0_comms_active 1 2 4 1060J 560 NJ 560 NJ 560 NJ
+preplace netloc tcp_bridge_0_comms_active 1 2 4 1050J 560 NJ 560 NJ 560 NJ
 preplace netloc tdm_version_1 1 0 5 NJ 1490 NJ 1490 NJ 1490 NJ 1490 NJ
-preplace netloc eprom_cfg_reader_0_dhcp_enable 1 1 2 500 700 1110J
+preplace netloc eprom_cfg_reader_0_dhcp_enable 1 1 2 540 350 NJ
 preplace netloc gateway_ip_addr_1 1 0 3 NJ 330 NJ 330 NJ
 preplace netloc CPLD_bridge_0_fpga_cmdl 1 5 1 NJ
-preplace netloc udp_rx_dest_port_1 1 0 3 NJ 350 NJ 350 1060
-preplace netloc tcp_port_1 1 0 3 NJ 660 510J 740 1140J
-preplace netloc eprom_cfg_reader_0_rx_out 1 1 4 NJ 400 1050J 510 NJ 510 1950
-preplace netloc eth_mac_1g_fifo_wrapper_0_rx_axis 1 2 3 1070 90 NJ 90 1940
+preplace netloc udp_rx_dest_port_1 1 0 3 NJ 350 510J 370 1110
+preplace netloc tcp_port_1 1 0 3 NJ 660 520J 750 1110J
+preplace netloc eprom_cfg_reader_0_rx_out 1 1 4 490J 70 NJ 70 NJ 70 N
+preplace netloc eth_mac_1g_fifo_wrapper_0_rx_axis 1 2 3 1110 90 NJ 90 1920
 preplace netloc temperature_1 1 0 5 NJ 1510 NJ 1510 NJ 1510 NJ 1510 NJ
-preplace netloc com5402_wrapper_0_rx_src_ip_addr 1 1 3 610 30 NJ 30 1590
-preplace netloc cfg_err_1 1 0 5 40J 20 NJ 20 NJ 20 NJ 20 1960J
-preplace netloc cfg_act_1 1 0 5 NJ 0 NJ 0 NJ 0 NJ 0 1980J
-preplace netloc com5402_wrapper_0_mac_tx 1 3 1 1610
-preplace netloc ARESETN_1 1 0 5 70 1590 NJ 1590 NJ 1590 1610 1590 NJ
-preplace netloc gig_ethernet_pcs_pma_0_userclk2_out 1 1 5 620 340 1120 590 1620 590 1970 590 2400
+preplace netloc com5402_wrapper_0_rx_src_ip_addr 1 1 3 650 710 NJ 710 1550
+preplace netloc cfg_err_1 1 0 5 NJ 40 NJ 40 NJ 40 NJ 40 1940J
+preplace netloc cfg_act_1 1 0 5 NJ 20 NJ 20 NJ 20 NJ 20 1970J
+preplace netloc com5402_wrapper_0_mac_tx 1 3 1 1590
+preplace netloc ARESETN_1 1 0 5 40 1590 NJ 1590 NJ 1590 1590 1590 NJ
 preplace netloc tcp_bridge_0_tcp_tx 1 2 1 1040
+preplace netloc gig_ethernet_pcs_pma_0_userclk2_out 1 1 5 640 410 1100 590 1600 590 1940 590 2390
 preplace netloc reset_1 1 0 5 NJ 1180 NJ 1180 NJ 1180 NJ 1180 NJ
 preplace netloc gig_ethernet_pcs_pma_0_status_vector 1 5 1 NJ
 preplace netloc TDM_CSR_0_resets 1 5 1 NJ
-preplace netloc tcp_bridge_0_S2MM_CMD 1 0 3 60 680 NJ 680 1000
-preplace netloc axi_datamover_0_M_AXI_MM2S 1 1 3 N 790 NJ 790 1600J
+preplace netloc tcp_bridge_0_S2MM_CMD 1 0 3 30 670 NJ 670 1000
+preplace netloc axi_datamover_0_M_AXI_MM2S 1 1 3 490 960 NJ 960 NJ
 preplace netloc trigger_word_1 1 0 5 NJ 1410 NJ 1410 NJ 1410 NJ 1410 NJ
-preplace netloc clk_1 1 0 5 40 1570 610 1570 NJ 1570 1560 1570 1990
-levelinfo -pg 1 0 290 830 1340 1780 2200 2420 -top -20 -bot 1640
+preplace netloc clk_1 1 0 5 20 1570 590 1570 NJ 1570 1560 1570 1950
+levelinfo -pg 1 0 290 830 1340 1760 2190 2410 -top 0 -bot 1640
 ",
 }
 
