@@ -199,7 +199,6 @@ begin
 
 		-- Clock out ports
 		CLK_100MHZ    => clk_100,
-		CLK_200MHZ    => open,
 		CLK_400MHZ    => clk_400,
 
 		-- Status and control signals
