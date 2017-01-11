@@ -120,7 +120,6 @@ architecture behavior of TDM_top is
 	signal pcs_pma_status_vector : std_logic_vector(15 downto 0);
 	alias link_established : std_logic is pcs_pma_status_vector(0);
 	signal pcs_pma_an_restart_config : std_logic;
-	signal comms_active : std_logic;
 
 	signal ExtTrig : std_logic_vector(7 downto 0);
 	signal sys_clk_mmcm_reset   : std_logic := '0';
@@ -145,21 +144,20 @@ architecture behavior of TDM_top is
 	signal ext_valid_re   : std_logic;
 	signal CMP : std_logic_vector(7 downto 0);
 
-	-- Internal trigger signals
+	-- etherenet comms status
+	signal comms_active : std_logic;
+	signal ethernet_mm2s_err, ethernet_s2mm_err : std_logic;
+
+	-- CSR registers
+	signal resets, uptime_seconds, uptime_nanoseconds, trigger_interval,
+		trigger_control : std_logic_vector(31 downto 0) := (others => '0');
+
+	-- Internal trigger signal
 	signal trigger          : std_logic;
-	signal trigger_interval : std_logic_vector(31 downto 0);
-	signal trigger_control  : std_logic_vector(31 downto 0);
-
-
-	--CSR registers
-	signal resets : std_logic_vector(31 downto 0);
-
 
 begin
 
---------------------------------------------------------------------------------
--- clocking
---------------------------------------------------------------------------------
+-------------------------  clocking   ------------------------------------------
 
 	sync_reflocked : entity work.synchronizer
 	port map ( rst => not(fpga_resetl), clk => clk_125, data_in => ref_locked, data_out => ref_locked_s );
@@ -222,9 +220,8 @@ begin
 		LOCKED        => cfg_clk_mmcm_locked
 	);
 
---------------------------------------------------------------------------------
--- resets
---------------------------------------------------------------------------------
+----------------------------  resets  -----------------------------------------
+
 	--Disable SFP when not present
 	sfp_enh <= '0' when sfp_presl = '1' or fpga_resetl = '0' else '1';
 	sfp_txdis <= '1' when sfp_presl = '1' or fpga_resetl = '0' else '0';
@@ -322,9 +319,27 @@ begin
 	--for now also reset memory with comms stack
 	rstn_axi <= not rst_comm_stack;
 
--------------------------------------------------------------------------------
--- comparator inputs
--------------------------------------------------------------------------------
+
+	------------------ front panel LEDs ------------------------
+
+	status_leds_inst : entity work.status_leds
+	port map (
+		clk                    => clk_100,
+		rst                    => rst_comm_stack,
+		link_established       => link_established,
+		comms_active           => comms_active,
+		comms_error            => ethernet_mm2s_err or ethernet_s2mm_err,
+		leds                   => dbg(7 downto 4)
+	);
+
+	dbg(3 downto 0) <= (others => '0');
+
+	-- Send output status to LEDs for checking
+	-- TODO
+	led <= (others => '0');
+
+
+--------------------------- comparator inputs ----------------------------------
 
 	CBF1 : for i in 0 to 7 generate
 		-- External trigger input from LVDS comparator.  Must be differentially termianted
@@ -352,14 +367,7 @@ begin
 
 	end generate;
 
-	-- Send output status to LEDs for checking
-	-- TODO
-	led <= (others => '0');
-	dbg <= (others => '0');
--------------------------------------------------------------------------------
--- SATA connections
--------------------------------------------------------------------------------
-
+-------------------------  SATA connections ------------------------------------
 
 	-- basic logic to broadcast input triggers to all output triggers
 	-- VALID on rising edge of CMP(7) or internal trigger
@@ -506,7 +514,10 @@ main_bd_inst : entity work.main_bd
 		sfp_rxp                   => sfp_rxp,
 		sfp_txn                   => sfp_txn,
 		sfp_txp                   => sfp_txp,
-		comms_active              => comms_active,
+
+		comms_active      => comms_active,
+		ethernet_mm2s_err => ethernet_mm2s_err,
+		ethernet_s2mm_err => ethernet_s2mm_err,
 
 		--CPLD interface
 		cfg_act   => cfg_act,
@@ -529,8 +540,46 @@ main_bd_inst : entity work.main_bd
 		tdm_version        => TDM_VERSION,
 		temperature        => (others => '0'),
 		trigger_word       => (others => '0'),
-		uptime_nanoseconds => (others => '0'),
-		uptime_seconds     => (others => '0')
+		uptime_nanoseconds => uptime_nanoseconds,
+		uptime_seconds     => uptime_seconds
 	);
+
+
+	--up time registers
+	up_time_counters : process(clk_100)
+		constant CLKS_PER_SEC   : natural := 100_000_000;
+		constant NS_PER_CLK     : natural := 10;
+		variable roll_over_ct   : unsigned(31 downto 0);
+		variable seconds_ct     : unsigned(31 downto 0);
+		variable nanoseconds_ct : unsigned(31 downto 0);
+	begin
+		if rising_edge(clk_100) then
+			if rstn_axi = '0' then
+				roll_over_ct := to_unsigned(CLKS_PER_SEC-2, 32);
+				seconds_ct := (others => '0');
+				nanoseconds_ct := (others => '0');
+				uptime_seconds <= (others => '0');
+				uptime_nanoseconds <= (others => '0');
+			else
+				--Output registers
+				uptime_seconds <= std_logic_vector(seconds_ct);
+				uptime_nanoseconds <= std_logic_vector(nanoseconds_ct);
+
+				--Check for roll-over
+				if roll_over_ct(roll_over_ct'high) = '1' then
+					roll_over_ct := to_unsigned(CLKS_PER_SEC-2, 32);
+					seconds_ct := seconds_ct + 1;
+					nanoseconds_ct := (others => '0');
+				else
+					nanoseconds_ct := nanoseconds_ct + NS_PER_CLK;
+					--Count down
+					roll_over_ct := roll_over_ct - 1;
+				end if;
+
+			end if;
+		end if;
+
+	end process;
+
 
 end behavior;
