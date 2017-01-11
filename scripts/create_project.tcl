@@ -66,3 +66,6 @@ update_compile_order -fileset sim_1
 
 #Get headerless bit file output
 set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]
+
+# update version generics every run
+set_property STEPS.SYNTH_DESIGN.TCL.PRE $REPO_PATH/scripts/update_version_generics.tcl [get_runs synth_1]

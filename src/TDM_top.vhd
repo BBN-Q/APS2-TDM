@@ -15,6 +15,11 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity TDM_top is
+generic (
+	TDM_VERSION    : std_logic_vector(31 downto 0) := x"0000_0000"; -- bits 31-28 = d for dirty; bits 27-16 commits since; bits 15-8 version major; bits 7-0 version minor;
+	GIT_SHA1        : std_logic_vector(31 downto 0) := x"0000_0000"; -- git SHA1 of HEAD;
+	BUILD_TIMESTAMP : std_logic_vector(31 downto 0) := x"0000_0000" -- 32h'YYMMDDHH as hex string e.g. 16032108 for 2016-March-21 8am
+);
 port
 (
 	ref_fpga    : in std_logic;  -- Global 10MHz reference
@@ -519,9 +524,9 @@ main_bd_inst : entity work.main_bd
 		trigger_interval => trigger_interval,
 
 		SATA_status        => (others => '0'),
-		build_timestamp    => (others => '0'),
-		git_sha1           => (others => '0'),
-		tdm_version        => (others => '0'),
+		build_timestamp    => BUILD_TIMESTAMP,
+		git_sha1           => GIT_SHA1,
+		tdm_version        => TDM_VERSION,
 		temperature        => (others => '0'),
 		trigger_word       => (others => '0'),
 		uptime_nanoseconds => (others => '0'),
