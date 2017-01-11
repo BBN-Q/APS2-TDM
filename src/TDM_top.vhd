@@ -1,4 +1,4 @@
--- ATM_top.vhd
+-- TDM_top.vhd
 --
 -- This is the top level module of the ATM firmware.
 -- It instantiates the main BD with the comms., 9 SATA outputs, and one SATA input.
@@ -14,7 +14,7 @@ use ieee.std_logic_misc.or_reduce;
 library unisim;
 use unisim.vcomponents.all;
 
-entity ATM_top is
+entity TDM_top is
 port
 (
 	ref_fpga    : in std_logic;  -- Global 10MHz reference
@@ -72,10 +72,10 @@ port
 	-- Debug LEDs / configuration jumpers
 	dbg        : inout  std_logic_vector(8 downto 0)
 );
-end ATM_top;
+end TDM_top;
 
 
-architecture behavior of ATM_top is
+architecture behavior of TDM_top is
 
 	--- Constants ---
 	constant SUBNET_MASK : std_logic_vector(31 downto 0) := x"ffffff00"; -- 255.255.255.0
