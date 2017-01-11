@@ -14,9 +14,6 @@ use ieee.std_logic_misc.or_reduce;
 library unisim;
 use unisim.vcomponents.all;
 
-use work.AtmIPCores.all;
-use work.ATMConstants.all;
-
 entity ATM_top is
 port
 (
@@ -178,7 +175,7 @@ begin
 	end process ; -- sys_mmcm_reset
 
 	-- multiply reference clock up to 100 MHz
-	CK1: REF_MMCM
+	ref_mmmc_inst : entity work.REF_MMCM
 	port map (
 		CLK_REF => ref_fpga,
 
@@ -192,7 +189,7 @@ begin
 
 	-- Create aligned 100 and 400 MHz clocks for SATA in/out logic
 	-- from either the 10 MHz reference or the 125 MHz sfp clock
-	CK0 : SYS_MMCM
+	sys_mmcm_inst : entity work.SYS_MMCM
 	port map
 	(
 		-- Clock in ports
@@ -212,7 +209,7 @@ begin
 
 	-- create a skewed copy of the cfg_clk to meet bus timing
 	-- also use for 200 MHz IODELAY reference calibration
-	CK2 : CCLK_MMCM
+	cfg_clk_mmcm : entity work.CCLK_MMCM
 	port map (
 		CLK_100MHZ_IN => cfg_clk,
 		CLK_100MHZ    => clk_100_skewed,

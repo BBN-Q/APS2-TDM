@@ -30,8 +30,6 @@ use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-use work.AtmIPCores.all;
-
 entity TriggerInLogic is
 port
 (
@@ -143,7 +141,7 @@ begin
   );
 
   -- Generate data receive clocks from the external 100 MHz trigger clock.
-  CK1 : TRIG_MMCM
+  CK1 : entity work.TRIG_MMCM
   port map
   (
     CLK_100MHZ_IN  => TRGCLK_IN_O,  -- From undelayed output of Trigger Clock ISERDES
@@ -557,7 +555,7 @@ begin
   end process;
 
 
-  TFFI : TIO_FIFO
+  TFFI : entity work.TIO_FIFO
   port map
   (
     rst         => not TrigDone,  -- Only enable FIFO once you have locked onto the incoming clock

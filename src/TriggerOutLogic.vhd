@@ -33,8 +33,6 @@ use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-use work.AtmIPCores.all;
-
 entity TriggerOutLogic is
 port
 (
@@ -86,7 +84,7 @@ begin
   -- On receive, the data is swapped again so that it ends up the the correct order at the output of the trigger receive FIFO
   -- 4 LS bits set for clock.  Reads as parallel 0xF0 at the receiver
 
-  SCLK1 : SEROUT8
+  SCLK1 : entity work.SEROUT8
   port map
   (
     data_out_to_pins_p   => ClkOutP,
@@ -97,7 +95,7 @@ begin
     io_reset             => RESET
   );
 
-  SDAT1 : SEROUT8
+  SDAT1 : entity work.SEROUT8
   port map
   (
     data_out_to_pins_p   => DatOutP,
@@ -143,7 +141,7 @@ begin
   end process;
 
 
-  TFFO : TIO_FIFO
+  TFFO : entity work.TIO_FIFO
   port map
   (
     rst         => RESET,
