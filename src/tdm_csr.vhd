@@ -143,7 +143,7 @@ begin
 			if s_axi_aresetn = '0' then
 				regs(0) <= x"00000000"; -- resets
 				regs(1) <= x"00000000"; -- control
-				regs(12) <= x"000493e0"; -- trigger_interval
+				regs(12) <= x"000186a0"; -- trigger_interval
 
 			else
 				for ct in 0 to 3 loop

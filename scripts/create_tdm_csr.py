@@ -30,7 +30,7 @@ if __name__ == '__main__':
 				Register(0, "resets",  "write"),
 				Register(1, "control", "write"),
 				Register(11, "trigger_word",  "read"), # shift register of last 4 bytes broadcast out on SATA
-				Register(12, "trigger_interval", "write", initial_value=0x000493e0), # trigger interval (1ms = 300,000 clock cycles)
+				Register(12, "trigger_interval", "write", initial_value=0x000186a0), # trigger interval (1ms = 100,000 clock cycles)
 				Register(18, "SATA_status", "read"),
 				Register(20, "uptime_seconds", "read"),
 				Register(21, "uptime_nanoseconds", "read"),
