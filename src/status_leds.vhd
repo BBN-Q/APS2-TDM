@@ -19,11 +19,14 @@ use ieee.numeric_std.all;
 
 entity status_leds is
 	port (
-		clk                    : in std_logic;
-		rst                    : in std_logic;
-		link_established       : in std_logic;
-		comms_active           : in std_logic;
-		comms_error            : in std_logic;
+		clk              : in std_logic;
+		rst              : in std_logic;
+		link_established : in std_logic;
+		comms_active     : in std_logic;
+		comms_error      : in std_logic;
+
+		inputs_latched  : in std_logic;
+		trigger_enabled : in std_logic;
 
 		leds                   : out std_logic_vector(3 downto 0)
 	);
@@ -45,7 +48,7 @@ signal enablePWM, enableHB : boolean := false;
 
 signal hbGreen : std_logic_vector(1 downto 0);
 
-signal comms_led, seq_led : std_logic_vector(1 downto 0) := DARK;
+signal comms_led, trigger_led : std_logic_vector(1 downto 0) := DARK;
 
 --status signals synced to module clock
 signal link_established_int, comms_active_int, comms_error_int : std_logic;
@@ -90,7 +93,7 @@ constant sineData : byteArray(0 to 255) := (
 begin
 
 leds(1 downto 0) <= comms_led;
-leds(3 downto 2) <= seq_led;
+leds(3 downto 2) <= trigger_led;
 
 --Divide down the AXI clock to something on the human timescale
 enableGenerator : process( clk )
@@ -227,6 +230,50 @@ begin
 		end if ;
 	end if ;
 end process ; -- commsLogic
+
+trigger_logic  : process(clk)
+	type state_t is (IDLE, BLINK_DARK, BLINK_GREEN);
+	variable state : state_t := IDLE;
+	variable idle_led : std_logic_vector(1 downto 0) := b"00";
+	variable blink_ct : natural range 0 to 1000;
+begin
+	if rising_edge(clk) then
+		if trigger_enabled = '1' then
+			idle_led := GREEN;
+		else
+			idle_led := DARK;
+		end if;
+
+		case( state ) is
+
+			when IDLE =>
+				trigger_led <= idle_led;
+
+				if inputs_latched = '1' then
+					state := BLINK_DARK;
+				end if;
+
+			when BLINK_DARK =>
+				trigger_led <= DARK;
+				if blink_ct = 50 then
+					blink_ct := 0;
+					state := BLINK_GREEN;
+				elsif khz_enable then
+					blink_ct := blink_ct + 1;
+				end if;
+
+			when BLINK_GREEN =>
+				trigger_led <= GREEN;
+				if blink_ct = 50 then
+					blink_ct := 0;
+					state := IDLE;
+				elsif khz_enable then
+					blink_ct := blink_ct + 1;
+				end if;
+
+		end case;
+	end if;
+end process;
 
 
 end architecture;
