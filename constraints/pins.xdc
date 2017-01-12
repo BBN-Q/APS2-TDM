@@ -170,5 +170,5 @@ set_property DIFF_TERM TRUE [get_ports {trig_ctrlp[1]}]
 #Also set consistent IOSTANDARD for vp/vn from XADC which are hard-wired to Bank 0 which is used for config
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 2.5 [current_design]
-#set_property IOSTANDARD LVCMOS25 [get_ports vp]
-#set_property IOSTANDARD LVCMOS25 [get_ports vn]
+set_property IOSTANDARD LVCMOS25 [get_ports vp]
+set_property IOSTANDARD LVCMOS25 [get_ports vn]

@@ -26,8 +26,8 @@ port
 	fpga_resetl : in  std_logic;  -- Global reset from config FPGA
 
 	-- Temp Diode Pins
-	-- vp : in  std_logic;
-	-- vn : in  std_logic;
+	vp : in  std_logic;
+	vn : in  std_logic;
 
 	-- Config Bus Connections
 	cfg_clk   : in  std_logic;  -- 100 MHZ clock from the Config CPLD
@@ -534,6 +534,10 @@ main_bd_inst : entity work.main_bd
 		fpga_rdyl => fpga_rdyl,
 		stat_oel  => stat_oel,
 
+		-- XADC Pins
+		XADC_Vp_Vn_v_n => vn,
+		XADC_Vp_Vn_v_p => vp,
+
 		-- CSR registers
 		control => control,
 		resets => resets,
@@ -543,7 +547,6 @@ main_bd_inst : entity work.main_bd
 		build_timestamp    => BUILD_TIMESTAMP,
 		git_sha1           => GIT_SHA1,
 		tdm_version        => TDM_VERSION,
-		temperature        => (others => '0'),
 		trigger_word       => (others => '0'),
 		uptime_nanoseconds => uptime_nanoseconds,
 		uptime_seconds     => uptime_seconds
