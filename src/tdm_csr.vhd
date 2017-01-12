@@ -71,8 +71,8 @@ architecture arch of TDM_CSR is
 begin
 
 	-- wire control/status ports to internal registers
-	resets             <= regs(0);
-	control            <= regs(1);
+	resets             <= regs(8);
+	control            <= regs(9);
 	trigger_interval   <= regs(12);
 	read_regs_register_pro: process (s_axi_aclk)
 	begin
@@ -141,20 +141,20 @@ begin
 			axi_wstrb <= s_axi_wstrb;
 
 			if s_axi_aresetn = '0' then
-				regs(0) <= x"00000000"; -- resets
-				regs(1) <= x"00000000"; -- control
+				regs(8) <= x"00000000"; -- resets
+				regs(9) <= x"00000000"; -- control
 				regs(12) <= x"000186a0"; -- trigger_interval
 
 			else
 				for ct in 0 to 3 loop
 					if axi_wstrb(ct) = '1' and axi_wready = '1' then
 						-- resets
-						if write_reg_addr = 0 then
-							regs(0)(ct*8+7 downto ct*8) <= axi_wdata(ct*8+7 downto ct*8);
+						if write_reg_addr = 8 then
+							regs(8)(ct*8+7 downto ct*8) <= axi_wdata(ct*8+7 downto ct*8);
 						end if;
 						-- control
-						if write_reg_addr = 1 then
-							regs(1)(ct*8+7 downto ct*8) <= axi_wdata(ct*8+7 downto ct*8);
+						if write_reg_addr = 9 then
+							regs(9)(ct*8+7 downto ct*8) <= axi_wdata(ct*8+7 downto ct*8);
 						end if;
 						-- trigger_interval
 						if write_reg_addr = 12 then
