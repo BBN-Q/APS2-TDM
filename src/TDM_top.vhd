@@ -149,11 +149,13 @@ architecture behavior of TDM_top is
 	signal ethernet_mm2s_err, ethernet_s2mm_err : std_logic;
 
 	-- CSR registers
-	signal resets, uptime_seconds, uptime_nanoseconds, trigger_interval,
+	signal control, resets, uptime_seconds, uptime_nanoseconds, trigger_interval,
 		trigger_control : std_logic_vector(31 downto 0) := (others => '0');
 
-	-- Internal trigger signal
-	signal trigger          : std_logic;
+	alias trigger_enabled  : std_logic is control(4);
+	alias soft_trig_toggle : std_logic is control(3);
+	alias trigger_source   : std_logic_vector(1 downto 0) is control(2 downto 1);
+	signal trigger         : std_logic;
 
 begin
 
@@ -324,12 +326,14 @@ begin
 
 	status_leds_inst : entity work.status_leds
 	port map (
-		clk                    => clk_100,
-		rst                    => rst_comm_stack,
-		link_established       => link_established,
-		comms_active           => comms_active,
-		comms_error            => ethernet_mm2s_err or ethernet_s2mm_err,
-		leds                   => dbg(7 downto 4)
+		clk              => clk_100,
+		rst              => rst_comm_stack,
+		link_established => link_established,
+		comms_active     => comms_active,
+		comms_error      => ethernet_mm2s_err or ethernet_s2mm_err,
+		inputs_latched   => ext_valid,
+		trigger_enabled  => trigger_enabled,
+		leds             => dbg(7 downto 4)
 	);
 
 	dbg(3 downto 0) <= (others => '0');
@@ -464,15 +468,16 @@ begin
 	-- Continually drain the input FIFO
 	TrigInRd <= TrigInReady;
 
+	-- internal trigger generator
 
 	IntTrig : entity work.InternalTrig
 	port map (
-		RESET => resets(0),
-		CLK => clk_100,
+		RESET           => not trigger_enabled,
+		CLK             => clk_100,
 		triggerInterval => trigger_interval,
-		triggerSource => trigger_control(0),
-		softTrigToggle => trigger_control(2),
-		trigger => trigger
+		triggerSource   => trigger_source(1),
+		softTrigToggle  => soft_trig_toggle,
+		trigger         => trigger
 	);
 
 -- wrap the main block design
@@ -530,7 +535,7 @@ main_bd_inst : entity work.main_bd
 		stat_oel  => stat_oel,
 
 		-- CSR registers
-		control => open,
+		control => control,
 		resets => resets,
 		trigger_interval => trigger_interval,
 
@@ -543,7 +548,6 @@ main_bd_inst : entity work.main_bd
 		uptime_nanoseconds => uptime_nanoseconds,
 		uptime_seconds     => uptime_seconds
 	);
-
 
 	--up time registers
 	up_time_counters : process(clk_100)
