@@ -138,7 +138,6 @@ architecture behavior of TDM_top is
 	signal TrigInRd       : std_logic;
 	signal TrigFull       : std_logic;
 
-	signal latched_trig_word : std_logic_vector(31 downto 0);
 	signal ext_valid      : std_logic;
 	signal ext_valid_d    : std_logic;
 	signal ext_valid_re   : std_logic;
@@ -150,7 +149,7 @@ architecture behavior of TDM_top is
 
 	-- CSR registers
 	signal control, resets, uptime_seconds, uptime_nanoseconds, trigger_interval,
-		trigger_control : std_logic_vector(31 downto 0) := (others => '0');
+		latched_trig_word : std_logic_vector(31 downto 0) := (others => '0');
 
 	alias trigger_enabled  : std_logic is control(4);
 	alias soft_trig_toggle : std_logic is control(3);
@@ -403,10 +402,13 @@ begin
 		end if;
 	end process;
 
+	-- store latched trigger words in a shift register that we report in a status register
 	process (clk_100)
 	begin
 		if rising_edge(clk_100) then
-			if TrigWr(0) = '1' then
+			if rst_sync_clk100 = '1' then
+				latched_trig_word <= (others => '0');
+			elsif TrigWr(0) = '1' then
 				latched_trig_word <= latched_trig_word(23 downto 0) & TrigOutDat(0);
 			end if;
 		end if;
@@ -551,7 +553,7 @@ main_bd_inst : entity work.main_bd
 		build_timestamp    => BUILD_TIMESTAMP,
 		git_sha1           => GIT_SHA1,
 		tdm_version        => TDM_VERSION,
-		trigger_word       => (others => '0'),
+		trigger_word       => latched_trig_word,
 		uptime_nanoseconds => uptime_nanoseconds,
 		uptime_seconds     => uptime_seconds
 	);
