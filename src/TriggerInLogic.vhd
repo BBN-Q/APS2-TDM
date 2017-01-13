@@ -330,12 +330,9 @@ begin
 
 
   -- Sync the reset before using it to reset the trigger state machine
-  process(TRIG_100MHZ)
-  begin
-    if rising_edge(TRIG_100MHZ) then
-      TrigRst <= RESET or (not TrigLocked);
-    end if;
-  end process;
+  reset_synchronizer_inst : entity work.synchronizer
+  generic map(RESET_VALUE => '1')
+  port map(rst => RESET or (not TrigLocked), clk => TRIG_100MHZ, data_in => '0', data_out => TrigRst);
 
   -- Clock alignment state machine
   process(TRIG_100MHZ, TrigRst)
