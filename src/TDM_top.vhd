@@ -110,7 +110,7 @@ architecture behavior of TDM_top is
 	signal rst_comm_stack, rst_cfg_reader, rst_comblock,
 				 rst_cpld_bridge, rst_eth_mac, rst_pcs_pma, rst_tcp_bridge,
 				 rst_udp_responder, rstn_axi,
-				 rst_sync_clk125, rst_sync_clk100,
+				 rst_sync_clk125, rst_sync_clk100, rst_cpld_sync_clk100,
 				 rst_sata : std_logic := '0';
 
 	signal cfg_reader_done : std_logic;
@@ -261,55 +261,55 @@ begin
 	--Wait until cfg_clk_mmcm_locked so that we have 200MHz reference before deasserting pcs/pma and MIG reset
 	rst_pcs_pma <= not cfg_clk_mmcm_locked;
 
-	--once we have CFG clock we can talk to CPLD
-	reset_synchronizer_clk_100 : entity work.synchronizer
+	-- once we have CFG clock and 100 MHz AXI clock we can talk to CPLD
+	reset_synchronizer_cpld_clk_100 : entity work.synchronizer
 	generic map(RESET_VALUE => '1')
-	port map(rst => not cfg_clk_mmcm_locked, clk => clk_100, data_in => '0', data_out => rst_sync_clk100);
-	rst_cpld_bridge <= rst_sync_clk100;
-	rst_sata <= rst_sync_clk100;
+	port map(rst => not (cfg_clk_mmcm_locked and sys_clk_mmcm_locked), clk => clk_100, data_in => '0', data_out => rst_cpld_sync_clk100);
+	rst_cpld_bridge <= rst_cpld_sync_clk100;
 
-	--Config reader reset and wait for done
-	cfg_reader_wait : process(sys_clk_mmcm_locked, clk_100)
+	-- hold config reader in reset until after CPLD and AXI are ready and give another 100ms
+	-- for ApsMsgProc to startup and do it's reading of the MAC address
+	-- then wait for done with timeout of 100ms so we have IP and MAC before releasing comm statck
+	cfg_reader_wait : process(clk_100)
 		variable reset_ct : unsigned(24 downto 0) := (others => '0');
 		variable wait_ct	: unsigned(24 downto 0) := (others => '0');
 		type state_t is (WAIT_FOR_RESET, WAIT_FOR_DONE, FINISHED);
 		variable state : state_t;
 	begin
-		if sys_clk_mmcm_locked = '0' then
-			state := WAIT_FOR_RESET;
-			reset_ct := to_unsigned(10_100_000, reset_ct'length); --101ms at 125MHz ignoring off-by-one issues
-			wait_ct := to_unsigned(10_000_000, wait_ct'length); --100ms at 125MHz ignoring off-by-one issues
-			rst_cfg_reader <= '1';
-			rst_comm_stack <= '1';
-		elsif rising_edge( clk_100) then
-			case( state ) is
+		if rising_edge(clk_100) then
+			if rst_cpld_bridge = '1' then
+				state := WAIT_FOR_RESET;
+				reset_ct := to_unsigned(10_000_000, reset_ct'length); --100ms at 100 MHz ignoring off-by-one issues
+				wait_ct := to_unsigned(10_000_000, wait_ct'length); --100ms at 100 MHz ignoring off-by-one issues
+				rst_cfg_reader <= '1';
+				rst_comm_stack <= '1';
+			else
+				case( state ) is
 
-				when WAIT_FOR_RESET =>
-					if reset_ct(reset_ct'high) = '1' then
-						state := WAIT_FOR_DONE;
-					else
-						reset_ct := reset_ct - 1;
-					end if;
+					when WAIT_FOR_RESET =>
+						if reset_ct(reset_ct'high) = '1' then
+							state := WAIT_FOR_DONE;
+						else
+							reset_ct := reset_ct - 1;
+						end if;
 
-				when WAIT_FOR_DONE =>
-					rst_cfg_reader <= '0';
-					if cfg_reader_done = '1' or wait_ct(wait_ct'high) = '1' then
-						state := FINISHED;
-					else
-						wait_ct := wait_ct - 1;
-					end if;
+					when WAIT_FOR_DONE =>
+						rst_cfg_reader <= '0';
+						if cfg_reader_done = '1' or wait_ct(wait_ct'high) = '1' then
+							state := FINISHED;
+						else
+							wait_ct := wait_ct - 1;
+						end if;
 
-				when FINISHED =>
-					rst_comm_stack <= '0';
+					when FINISHED =>
+						rst_comm_stack <= '0';
 
-			end case;
-
+				end case;
+			end if;
 		end if;
 	end process;
 
-	rst_tcp_bridge <= rst_comm_stack;
-
-	-- synchronize resets to appropriate clock domains
+	-- synchronize comm stack reset to 125 MHz ethernet clock domain
 	reset_synchronizer_clk_125Mhz : entity work.synchronizer
 	generic map(RESET_VALUE => '1')
 	port map(rst => rst_comm_stack, clk => clk_125, data_in => '0', data_out => rst_sync_clk125);
@@ -318,9 +318,14 @@ begin
 	rst_comblock <= rst_sync_clk125;
 	rst_eth_mac <= rst_sync_clk125;
 
-	--for now also reset memory with comms stack
-	rstn_axi <= not rst_comm_stack;
+	-- hold AXI and SATA in reset until we have clk_axi from clk_100
+	reset_synchronizer_clk_100 : entity work.synchronizer
+	generic map(RESET_VALUE => '1')
+	port map(rst => not sys_clk_mmcm_locked, clk => clk_100, data_in => '0', data_out => rst_sync_clk100);
 
+	rst_tcp_bridge <= rst_sync_clk100;
+	rst_sata <= rst_sync_clk100;
+	rstn_axi <= not rst_sync_clk100;
 
 	------------------ front panel LEDs ------------------------
 
@@ -469,7 +474,6 @@ begin
 	TrigInRd <= TrigInReady;
 
 	-- internal trigger generator
-
 	IntTrig : entity work.InternalTrig
 	port map (
 		RESET           => not trigger_enabled,
@@ -508,7 +512,7 @@ main_bd_inst : entity work.main_bd
 		rst_tcp_bridge    => rst_tcp_bridge,
 		rst_udp_responder => rst_udp_responder,
 		rstn_axi          => rstn_axi,
-		cfg_reader_done => cfg_reader_done,
+		cfg_reader_done   => cfg_reader_done,
 
 		--SFP
 		sfp_signal_detect         => not sfp_los,
