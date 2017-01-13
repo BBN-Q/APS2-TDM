@@ -22,7 +22,7 @@ set_output_delay -clock cfg_clk -min -1.000 [get_ports stat_oel]
 
 # We skew cfg_clk for the ApsMsgProc (clk_100MHz_skewed_cfg_clk_mmcm) by 1ns, so we need to add a multicycle path
 # constraint so that Vivado will examine the clock edge at 11ns
-set_multicycle_path 2 -setup -from [get_clocks cfg_clk] -to [get_clocks CLK_100MHZ_CCLK_MMCM]
+set_multicycle_path 2 -setup -from [get_clocks cfg_clk] -to [get_clocks clk_100MHz_skewed_CCLK_MMCM]
 
 # Disable checking on OE timing since it is enabled more than one clock ahead of using the data
 set_false_path -from [get_cells main_bd_inst/CPLD_bridge_0/U0/apsmsgproc_wrapper_inst/msgproc_impl.AMP1/ACP1/CFG1/ExtOE] -to [get_ports {cfgd[*]}]

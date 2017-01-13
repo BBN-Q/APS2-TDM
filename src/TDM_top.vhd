@@ -93,12 +93,8 @@ architecture behavior of TDM_top is
 
 
 	--- clocks
-	signal clk_100 : std_logic;
-	signal clk_100_skewed : std_logic;
-	signal clk_125 : std_logic;
-	signal clk_200 : std_logic;
-	signal clk_400 : std_logic;
-	signal ref_125 : std_logic;
+	signal clk_100, clk_100_skewed, clk_100_axi, clk_125, clk_200, clk_400,
+	       ref_125 : std_logic;
 
 	signal cfg_clk_mmcm_locked : std_logic;
 	signal ref_locked          : std_logic;
@@ -108,10 +104,10 @@ architecture behavior of TDM_top is
 
 	-- Resets
 	signal rst_comm_stack, rst_cfg_reader, rst_comblock,
-				 rst_cpld_bridge, rst_eth_mac, rst_pcs_pma, rst_tcp_bridge,
-				 rst_udp_responder, rstn_axi,
-				 rst_sync_clk125, rst_sync_clk100, rst_cpld_sync_clk100,
-				 rst_sata : std_logic := '0';
+         rst_cpld_bridge, rst_eth_mac, rst_pcs_pma, rst_tcp_bridge,
+         rst_udp_responder, rstn_axi,
+         rst_sync_clk125, rst_sync_clk100, rst_sync_clk_100_axi,
+         rst_sata : std_logic := '0';
 
 	signal cfg_reader_done : std_logic;
 
@@ -211,14 +207,16 @@ begin
 	);
 
 	-- create a skewed copy of the cfg_clk to meet bus timing
-	-- also use for 200 MHz IODELAY reference calibration
+	-- create a 100MHz clock for AXI
+	-- create a 200 MHz IODELAY reference calibration
 	cfg_clk_mmcm : entity work.CCLK_MMCM
 	port map (
-		CLK_100MHZ_IN => cfg_clk,
-		CLK_100MHZ    => clk_100_skewed,
-		CLK_200MHZ    => clk_200,
-		RESET         => not fpga_resetl,
-		LOCKED        => cfg_clk_mmcm_locked
+		clk_100MHZ_in     => cfg_clk,
+		clk_100MHZ_skewed => clk_100_skewed,
+		clk_100MHZ        => clk_100_axi,
+		clk_200MHZ        => clk_200,
+		reset             => not fpga_resetl,
+		locked            => cfg_clk_mmcm_locked
 	);
 
 ----------------------------  resets  -----------------------------------------
@@ -260,23 +258,25 @@ begin
 	--Wait until cfg_clk_mmcm_locked so that we have 200MHz reference before deasserting pcs/pma and MIG reset
 	rst_pcs_pma <= not cfg_clk_mmcm_locked;
 
-	-- once we have CFG clock and 100 MHz AXI clock we can talk to CPLD
-	reset_synchronizer_cpld_clk_100 : entity work.synchronizer
+	-- once we have CFG clock MMCM locked we have CPLD and AXI and we can talk to CPLD
+	reset_synchronizer_clk_100_axi : entity work.synchronizer
 	generic map(RESET_VALUE => '1')
-	port map(rst => not (cfg_clk_mmcm_locked and sys_clk_mmcm_locked), clk => clk_100, data_in => '0', data_out => rst_cpld_sync_clk100);
-	rst_cpld_bridge <= rst_cpld_sync_clk100;
+	port map(rst => not cfg_clk_mmcm_locked, clk => clk_100_axi, data_in => '0', data_out => rst_sync_clk_100_axi);
+	rst_cpld_bridge <= rst_sync_clk_100_axi;
+	rst_tcp_bridge <= rst_sync_clk_100_axi;
+	rstn_axi <= not rst_sync_clk_100_axi;
 
 	-- hold config reader in reset until after CPLD and AXI are ready and give another 100ms
 	-- for ApsMsgProc to startup and do it's reading of the MAC address
 	-- then wait for done with timeout of 100ms so we have IP and MAC before releasing comm statck
-	cfg_reader_wait : process(clk_100)
+	cfg_reader_wait : process(clk_100_axi)
 		variable reset_ct : unsigned(24 downto 0) := (others => '0');
 		variable wait_ct	: unsigned(24 downto 0) := (others => '0');
 		type state_t is (WAIT_FOR_RESET, WAIT_FOR_DONE, FINISHED);
 		variable state : state_t;
 	begin
-		if rising_edge(clk_100) then
-			if rst_cpld_bridge = '1' then
+		if rising_edge(clk_100_axi) then
+			if rst_sync_clk_100_axi = '1' then
 				state := WAIT_FOR_RESET;
 				reset_ct := to_unsigned(10_000_000, reset_ct'length); --100ms at 100 MHz ignoring off-by-one issues
 				wait_ct := to_unsigned(10_000_000, wait_ct'length); --100ms at 100 MHz ignoring off-by-one issues
@@ -317,20 +317,18 @@ begin
 	rst_comblock <= rst_sync_clk125;
 	rst_eth_mac <= rst_sync_clk125;
 
-	-- hold AXI and SATA in reset until we have clk_axi from clk_100
+	-- hold SATA in reset until we have system clock and cfg_clk for 200MHz reference
 	reset_synchronizer_clk_100 : entity work.synchronizer
 	generic map(RESET_VALUE => '1')
-	port map(rst => not sys_clk_mmcm_locked, clk => clk_100, data_in => '0', data_out => rst_sync_clk100);
+	port map(rst => not (sys_clk_mmcm_locked and cfg_clk_mmcm_locked), clk => clk_100, data_in => '0', data_out => rst_sync_clk100);
 
-	rst_tcp_bridge <= rst_sync_clk100;
 	rst_sata <= rst_sync_clk100;
-	rstn_axi <= not rst_sync_clk100;
 
 	------------------ front panel LEDs ------------------------
 
 	status_leds_inst : entity work.status_leds
 	port map (
-		clk              => clk_100,
+		clk              => clk_100_axi,
 		rst              => rst_comm_stack,
 		link_established => link_established,
 		comms_active     => comms_active,
@@ -500,7 +498,7 @@ main_bd_inst : entity work.main_bd
 
 		--clocks
 		clk_125           => clk_125,
-		clk_axi           => clk_100,
+		clk_axi           => clk_100_axi,
 		clk_ref_200       => clk_200,
 		sfp_mgt_clk_clk_n => sfp_mgt_clkn,
 		sfp_mgt_clk_clk_p => sfp_mgt_clkp,
@@ -559,15 +557,15 @@ main_bd_inst : entity work.main_bd
 	);
 
 	--up time registers
-	up_time_counters : process(clk_100)
+	up_time_counters : process(clk_100_axi)
 		constant CLKS_PER_SEC   : natural := 100_000_000;
 		constant NS_PER_CLK     : natural := 10;
 		variable roll_over_ct   : unsigned(31 downto 0);
 		variable seconds_ct     : unsigned(31 downto 0);
 		variable nanoseconds_ct : unsigned(31 downto 0);
 	begin
-		if rising_edge(clk_100) then
-			if rstn_axi = '0' then
+		if rising_edge(clk_100_axi) then
+			if rst_sync_clk_100_axi = '1' then
 				roll_over_ct := to_unsigned(CLKS_PER_SEC-2, 32);
 				seconds_ct := (others => '0');
 				nanoseconds_ct := (others => '0');
