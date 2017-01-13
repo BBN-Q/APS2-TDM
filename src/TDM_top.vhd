@@ -335,7 +335,7 @@ begin
 		link_established => link_established,
 		comms_active     => comms_active,
 		comms_error      => ethernet_mm2s_err or ethernet_s2mm_err,
-		inputs_latched   => ext_valid,
+		inputs_latched   => ext_valid_re,
 		trigger_enabled  => trigger_enabled,
 		leds             => dbg(7 downto 4)
 	);
