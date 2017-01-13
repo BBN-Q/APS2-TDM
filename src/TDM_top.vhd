@@ -209,7 +209,7 @@ begin
 	-- create a skewed copy of the cfg_clk to meet bus timing
 	-- create a 100MHz clock for AXI
 	-- create a 200 MHz IODELAY reference calibration
-	cfg_clk_mmcm : entity work.CCLK_MMCM
+	cfg_clk_mmcm_inst : entity work.CCLK_MMCM
 	port map (
 		clk_100MHZ_in     => cfg_clk,
 		clk_100MHZ_skewed => clk_100_skewed,

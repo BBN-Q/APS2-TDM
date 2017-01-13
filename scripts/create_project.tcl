@@ -39,6 +39,7 @@ add_files -norecurse $REPO_PATH/src
 
 # constraints
 add_files -fileset constrs_1 -norecurse $REPO_PATH/constraints
+add_files -fileset constrs_1 -norecurse $REPO_PATH/deps/VHDL-Components/constraints/synchronizer.tcl
 set_property target_constrs_file $REPO_PATH/constraints/timing.xdc [current_fileset -constrset]
 
 # ip cores
