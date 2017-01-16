@@ -87,7 +87,6 @@ architecture behavior of TDM_top is
 	constant TCP_PORT : std_logic_vector(15 downto 0) := x"bb4e"; -- BBN
 	constant UDP_PORT : std_logic_vector(15 downto 0) := x"bb4f"; -- BBN + 1
 	constant GATEWAY_IP_ADDR : std_logic_vector(31 downto 0) := x"c0a80201"; -- TODO: what this should be?
-	constant IFG_DELAY : std_logic_vector(7 downto 0) := x"0c"; --interframe gap of 12 -standard is 96 bits (12 bytes) see https://en.wikipedia.org/wiki/Interpacket_gap
 	constant PCS_PMA_AN_ADV_CONFIG_VECTOR : std_logic_vector(15 downto 0) := x"0020"; --full-duplex see Table 2-55 (pg. 74) of PG047 November 18, 2015
 	constant PCS_PMA_CONFIGURATION_VECTOR : std_logic_vector(4 downto 0) := b"10000"; --auto-negotiation enabled see Table 2-54 (pg. 73) of PG047 November 18, 2015
 
@@ -226,33 +225,32 @@ begin
 	status(3) <= sys_clk_mmcm_locked;
 	status(4) <= sys_clk_mmcm_reset;
 
-----------------------------  resets  -----------------------------------------
+	-------------------- SFP -------------------------------------------------------
 
-	--Disable SFP when not present
-	sfp_enh <= '0' when sfp_presl = '1' or fpga_resetl = '0' else '1';
-	sfp_txdis <= '1' when sfp_presl = '1' or fpga_resetl = '0' else '0';
+	-- force use of usused pins
+	sfp_scl <= '1' when
+		(fpga_resetl = '0' and (sfp_sda and sfp_fault and sfp_los and sfp_presl) = '1')
+		else '0';
 
-	-- tie-off unused ports
-	sfp_scl <= '0';
-
-	-- SFP may take up to 300ms to initialize after power up according to spec.
-	-- Chris used only 100ms
-	-- wait that long and then reset the autonegotiation
-	sfp_an_reset_proc : process( clk_125, cfg_clk_mmcm_locked, mgt_clk_locked )
+	-- reset SFP module for at least 100 ms when FPGA is reprogrammed or fpga_resetl is asserted
+	sfp_reset_pro : process(clk_125, mgt_clk_locked, sfp_presl)
 		variable reset_ct : unsigned(24 downto 0) := (others => '0');
 	begin
-		--Wait until all the clocks are locked
-		if cfg_clk_mmcm_locked = '0' or mgt_clk_locked = '0' then
+		if mgt_clk_locked = '0' or sfp_presl = '1' then
 			reset_ct := to_unsigned(12_500_000, reset_ct'length); --100ms at 125MHz ignoring off-by-one issues
-			pcs_pma_an_restart_config <= '0';
-		elsif rising_edge( clk_125 ) then
+			sfp_enh <= '0';
+			sfp_txdis <= '1';
+		elsif rising_edge(clk_125) then
 			if reset_ct(reset_ct'high) = '1' then
-				pcs_pma_an_restart_config <= '1';
+				sfp_enh <= '1';
+				sfp_txdis <= '0';
 			else
 				reset_ct := reset_ct - 1;
 			end if;
 		end if;
 	end process;
+
+----------------------------  resets  -----------------------------------------
 
 	-- Reset sequencing:
 	-- 1. CFG clock is reset by FPGA_RESETL and everything waits on CFG clock to lock
@@ -504,7 +502,6 @@ main_bd_inst : entity work.main_bd
 	port map (
 		--configuration constants
 		gateway_ip_addr              => GATEWAY_IP_ADDR,
-		ifg_delay                    => IFG_DELAY,
 		subnet_mask                  => SUBNET_MASK,
 		tcp_port                     => TCP_PORT,
 		udp_port                     => UDP_PORT,
@@ -530,10 +527,8 @@ main_bd_inst : entity work.main_bd
 		cfg_reader_done   => cfg_reader_done,
 
 		--SFP
-		sfp_signal_detect         => not sfp_los,
 		pcs_pma_mmcm_locked       => mgt_clk_locked,
 		pcs_pma_status_vector     => pcs_pma_status_vector,
-		pcs_pma_an_restart_config => pcs_pma_an_restart_config,
 		sfp_rxn                   => sfp_rxn,
 		sfp_rxp                   => sfp_rxp,
 		sfp_txn                   => sfp_txn,
