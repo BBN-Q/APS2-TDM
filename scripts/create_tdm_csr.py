@@ -3,17 +3,11 @@
 # Bit Maps
 # ---------------------
 #
-# resets
-# 	0 : Internal Trigger
-# 	1 : open
-# 	2 : open
-# 	3 : open
 #
-# trigger_control:
-#
-# 	0 : trigger source (0 internal, 1 software)
-# 	2 : software trigger toggle
-#
+# control:
+#  4 : trigger enabled (active high)
+#  3 : software trigger toggle
+#  2 : trigger source (0 internal, 1 software)
 #
 # Original author: Colm Ryan
 # Copyright 2016, Raytheon BBN Technologies
