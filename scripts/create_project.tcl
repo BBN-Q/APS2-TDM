@@ -26,7 +26,6 @@ create_project -force $PROJECT_NAME $PROJECT_DIR/$PROJECT_NAME -part xc7a200tfbg
 
 # set project properties
 set obj [get_projects TDM-impl]
-set_property "corecontainer.enable" "1" $obj
 set_property "default_lib" "xil_defaultlib" $obj
 set_property "ip_cache_permissions" "disable" $obj
 set_property "sim.ip.auto_export_scripts" "1" $obj
@@ -57,6 +56,7 @@ remove_files -fileset constrs_1 $REPO_PATH/deps/APS2-Comms//constraints/timing.x
 # main BD
 source $REPO_PATH/src/bd/main_bd.tcl -quiet
 regenerate_bd_layout
+set_property -dict [list CONFIG.BOARD_TYPE {"00000001"}] [get_bd_cells CPLD_bridge_0]
 validate_bd_design
 save_bd_design
 generate_target all [get_files main_bd.bd] -quiet
