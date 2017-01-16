@@ -56,7 +56,7 @@ set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets ref_mmmc_inst/inst/CLK_REF
 set_false_path -to [get_ports {dbg[*]}]
 set_false_path -to [get_ports {led[*]}]
 
-#MAC and IPv4 address are updated once so don't worry about CDC
+# MAC and IPv4 address are updated once so don't worry about CDC
 set_false_path -through [get_pins main_bd_inst/com5402_wrapper_0/mac_addr[*]]
 set_false_path -through [get_pins main_bd_inst/com5402_wrapper_0/IPv4_addr[*]]
 

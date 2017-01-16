@@ -16,6 +16,7 @@ port (
 	trigger_interval   : out std_logic_vector(31 downto 0);
 
 	-- CSR status ports
+	status             : in std_logic_vector(31 downto 0);
 	trigger_word       : in std_logic_vector(31 downto 0);
 	SATA_status        : in std_logic_vector(31 downto 0);
 	uptime_seconds     : in std_logic_vector(31 downto 0);
@@ -77,6 +78,7 @@ begin
 	read_regs_register_pro: process (s_axi_aclk)
 	begin
 		if rising_edge(s_axi_aclk) then
+			regs(0) <= status;
 			regs(11) <= trigger_word;
 			regs(18) <= SATA_status;
 			regs(20) <= uptime_seconds;

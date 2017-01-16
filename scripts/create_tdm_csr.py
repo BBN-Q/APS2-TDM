@@ -3,14 +3,30 @@
 # Bit Maps
 # ---------------------
 #
+# clock_status:
+#  0 : mgt_clk_locked - if low we probably won't be able to read anyways
+#  1 : cfg_clk_mmcm_locked - if low we probably won't be able to read anyways
+#  2 : ref_clk_mmcm_locked - determines what drives the sys clk
+#  3 : sys_clk_mmcm_locked
+#  4 : sys_clk_mmcm_reset
 #
 # control:
 #  4 : trigger enabled (active high)
 #  3 : software trigger toggle
 #  2 : trigger source (0 internal, 1 software)
 #
+# SATA_status:
+# 8-0  : TrigWr
+# 17-9 : TrigOutFull
+# 20   : ext_valid
+# 24   : TrigLocked
+# 25   : TrigClkErr
+# 26   : TrigOvflErr
+#
+#
 # Original author: Colm Ryan
 # Copyright 2016, Raytheon BBN Technologies
+
 
 import sys, os
 
@@ -21,6 +37,7 @@ from axi_csr import Register, write_axi_csr
 if __name__ == '__main__':
 
 	registers = [
+				Register(0, "status", "read"),
 				Register(8, "resets",  "write"),
 				Register(9, "control", "write"),
 				Register(11, "trigger_word",  "read"), # shift register of last 4 bytes broadcast out on SATA

@@ -144,8 +144,8 @@ architecture behavior of TDM_top is
 	signal ethernet_mm2s_err, ethernet_s2mm_err : std_logic;
 
 	-- CSR registers
-	signal control, resets, uptime_seconds, uptime_nanoseconds, trigger_interval,
-		latched_trig_word : std_logic_vector(31 downto 0) := (others => '0');
+	signal status, control, resets, SATA_status, uptime_seconds, uptime_nanoseconds,
+	  trigger_interval, latched_trig_word : std_logic_vector(31 downto 0) := (others => '0');
 
 	alias trigger_enabled  : std_logic is control(4);
 	alias soft_trig_toggle : std_logic is control(3);
@@ -218,6 +218,13 @@ begin
 		reset             => not fpga_resetl,
 		locked            => cfg_clk_mmcm_locked
 	);
+
+	-- wire out status register bits
+	status(0) <= mgt_clk_locked; --if low we probably won't be able to read anyways
+	status(1) <= cfg_clk_mmcm_locked; --if low we probably won't be able to read anyways
+	status(2) <= ref_locked;
+	status(3) <= sys_clk_mmcm_locked;
+	status(4) <= sys_clk_mmcm_reset;
 
 ----------------------------  resets  -----------------------------------------
 
@@ -400,18 +407,6 @@ begin
 		end if;
 	end process;
 
-	-- store latched trigger words in a shift register that we report in a status register
-	process (clk_100)
-	begin
-		if rising_edge(clk_100) then
-			if rst_sync_clk100 = '1' then
-				latched_trig_word <= (others => '0');
-			elsif TrigWr(0) = '1' then
-				latched_trig_word <= latched_trig_word(23 downto 0) & TrigOutDat(0);
-			end if;
-		end if;
-	end process;
-
 	TO1 : for i in 0 to 8 generate
 		-- Externally, cable routing requires a non sequential JTx to TOx routing.
 		-- The cables are routed from the PCB connectors to the front panel as shown below.
@@ -484,7 +479,27 @@ begin
 		trigger         => trigger
 	);
 
--- wrap the main block design
+	-- wire out status registers
+	SATA_status(8 downto 0) <= TrigWr;
+	SATA_status(17 downto 9) <= TrigOutFull;
+	SATA_status(20) <= ext_valid;
+	SATA_status(24) <= TrigLocked;
+	SATA_status(25) <= TrigClkErr;
+	SATA_status(26) <= TrigOvflErr;
+
+	-- store latched trigger words in a shift register that we report in a status register
+	process (clk_100)
+	begin
+		if rising_edge(clk_100) then
+			if rst_sync_clk100 = '1' then
+				latched_trig_word <= (others => '0');
+			elsif TrigWr(0) = '1' then
+				latched_trig_word <= latched_trig_word(23 downto 0) & TrigOutDat(0);
+			end if;
+		end if;
+	end process;
+
+------------------------ wrap the main block design ----------------------------
 main_bd_inst : entity work.main_bd
 	port map (
 		--configuration constants
@@ -543,11 +558,11 @@ main_bd_inst : entity work.main_bd
 		XADC_Vp_Vn_v_p => vp,
 
 		-- CSR registers
-		control => control,
-		resets => resets,
-		trigger_interval => trigger_interval,
-
-		SATA_status        => (others => '0'),
+		status             => status,
+		control            => control,
+		resets             => resets,
+		trigger_interval   => trigger_interval,
+		SATA_status        => SATA_status,
 		build_timestamp    => BUILD_TIMESTAMP,
 		git_sha1           => GIT_SHA1,
 		tdm_version        => TDM_VERSION,
