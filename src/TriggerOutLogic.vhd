@@ -29,8 +29,6 @@ use unisim.vcomponents.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
-use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 entity TriggerOutLogic is
@@ -102,7 +100,7 @@ begin
     data_out_to_pins_n   => DatOutN,
     clk_in               => CLK_400MHZ,
     clk_div_in           => CLK_100MHZ,
-    data_out_from_device => SerTrigOut(0) & SerTrigOut(1) & SerTrigOut(2) & SerTrigOut(3) & SerTrigOut(4) & SerTrigOut(5) & SerTrigOut(6) & SerTrigOut(7), -- Swapped Trigger Byte
+    data_out_from_device(0 to 7) => SerTrigOut, -- Swapped Trigger Byte
     io_reset             => RESET
   );
 
