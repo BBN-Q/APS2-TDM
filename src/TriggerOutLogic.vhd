@@ -100,7 +100,15 @@ begin
     data_out_to_pins_n   => DatOutN,
     clk_in               => CLK_400MHZ,
     clk_div_in           => CLK_100MHZ,
-    data_out_from_device(0 to 7) => SerTrigOut, -- Swapped Trigger Byte
+    -- data_out_from_device(0 to 7) => SerTrigOut, -- Swapped Trigger Byte
+    data_out_from_device(0) => SerTrigOut(0),
+    data_out_from_device(1) => SerTrigOut(1),
+    data_out_from_device(2) => SerTrigOut(2),
+    data_out_from_device(3) => SerTrigOut(3),
+    data_out_from_device(4) => SerTrigOut(4),
+    data_out_from_device(5) => SerTrigOut(5),
+    data_out_from_device(6) => SerTrigOut(6),
+    data_out_from_device(7) => SerTrigOut(7),
     io_reset             => RESET
   );
 
