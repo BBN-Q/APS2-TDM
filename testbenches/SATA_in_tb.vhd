@@ -15,8 +15,8 @@ architecture Behavioral of SATA_in_tb is
 	constant clk200_period: time := 5 ns;
 	constant clk400_period: time := 2.5 ns;
 
-	signal clk_user, clk_sata     : std_logic := '0';
-	signal clk400_tdm, clk200_tdm, clk100_tdm : std_logic := '0';
+	signal clk_user, clk_sata     : std_logic := '1';
+	signal clk400_tdm, clk200_tdm, clk100_tdm : std_logic := '1';
 	signal stop_the_clock         : boolean;
 
 	signal rst_tdm           : std_logic := '0';
@@ -52,7 +52,7 @@ begin
 	(
 		USER_CLK   =>  clk_user,     -- Clock for the output side of the FIFO
 		CLK_200MHZ =>  clk200_tdm,   -- Delay calibration clock
-		RESET      =>  rst_tdm,      -- Asynchronous reset for the trigger logic and FIFO
+		RESET      =>  rst_tdm,      -- Reset for the trigger logic and FIFO
 
 		TRIG_CLKP  =>  twisted_pair_a_p,  -- 100MHz Serial Clock, clocks input side of FIFO
 		TRIG_CLKN  =>  twisted_pair_a_n,
@@ -96,16 +96,17 @@ begin
 		wait for 30 ns;
 		rst_tdm <= '0';
 		wait until aps2_locked = '1';
-		wait for 500 ns;
+		wait for 100 ns;
 
 		-- Throw some data through the twisted pairs
-		for i in 1 to 4 loop
+		for i in 0 to 7 loop
 			wait until rising_edge(clk_user);
 			tdm_tx <= std_logic_vector(to_unsigned(i, 8));
 			tdm_tx_valid <= '1';
 		end loop;
 
 		-- Turn off transmission and wait.
+		wait until rising_edge(clk_user);
 		tdm_tx_valid <= '0';
 		wait for 1000 ns;
 
