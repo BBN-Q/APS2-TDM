@@ -15,7 +15,7 @@ architecture Behavioral of SATA_in_tb is
 	constant clk200_period: time := 5 ns;
 	constant clk400_period: time := 2.5 ns;
 
-	signal clk_user, clk_sata     : std_logic := '1';
+	signal clk_user     : std_logic := '1';
 	signal clk400_tdm, clk200_tdm, clk100_tdm : std_logic := '1';
 	signal stop_the_clock         : boolean;
 
