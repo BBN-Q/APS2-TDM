@@ -112,7 +112,7 @@ begin
              else "111" when TrigState = TRIG_DONE
              else "000";
 
-  -- Trigger 1 Received Clock
+  -- Buffer Received Clock
   BTC1 : IBUFDS
   generic map
   (
@@ -126,7 +126,7 @@ begin
     IB => TRIG_CLKN  -- Diff_n buffer input (connect directly to top-level port)
   );
 
-  -- Trigger 1 Received Data
+  -- Buffer Received Data
   BTD1 : IBUFDS
   generic map
   (
@@ -535,8 +535,9 @@ begin
 
           TrigDat <= SlipData;  -- Save data for possible FIFO write
 
-          -- Write non-zero value to the trigger receive FIFO
-          if SlipData /= 0 then
+          -- We send 0xFF to indicate "no data", write non-0xFF values to the
+          -- trigger receive FIFO
+          if SlipData /= x"ff" then
             if TrigFull = '0' then
               TrigValid <= '1';   -- Enable write in next cycle
             else
