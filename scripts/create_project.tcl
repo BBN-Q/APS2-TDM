@@ -51,7 +51,7 @@ source $REPO_PATH/deps/APS2-Comms/scripts/add_comblocks_files.tcl
 source $REPO_PATH/deps/APS2-Comms/scripts/add_files_to_project.tcl
 
 # has timing specific to aps comms bd
-remove_files -fileset constrs_1 $REPO_PATH/deps/APS2-Comms//constraints/timing.xdc
+remove_files -fileset constrs_1 $REPO_PATH/deps/APS2-Comms/constraints/timing.xdc
 
 # main BD
 source $REPO_PATH/src/bd/main_bd.tcl -quiet

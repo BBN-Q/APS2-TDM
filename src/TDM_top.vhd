@@ -173,7 +173,7 @@ begin
 		end if;
 	end process ; -- sys_mmcm_reset
 
-	-- multiply reference clock up to 100 MHz
+	-- multiply reference clock up to 125 MHz
 	ref_mmmc_inst : entity work.REF_MMCM
 	port map (
 		CLK_REF => ref_fpga,
@@ -393,6 +393,7 @@ begin
 		if rising_edge(clk_100) then
 			ext_valid_d <= ext_valid;
 			if trigger = '1' then
+				-- magic symbol of 0xFE indicates a system trigger to slave modules
 				TrigOutDat <= (others => x"fe");
 			else
 				TrigOutDat <= (others => '0' & CMP(6 downto 0));
@@ -425,7 +426,8 @@ begin
 		(
 			USER_CLK   => clk_100,
 
-			-- These clocks are usually generated from an MMCM driven by the CFG_CCLK.
+			-- These clocks are driven by SYS_MMCM, and thus are locked to the 10 MHz
+			-- reference (if present), or the SFP clock.
 			CLK_100MHZ => clk_100,
 			CLK_400MHZ => CLK_400,
 			RESET      => rst_sata,
