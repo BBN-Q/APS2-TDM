@@ -35,7 +35,6 @@ architecture Behavioral of SATA_in_tb is
 	signal aps2_rx     : std_logic_vector(7 downto 0) := (others => '0');
 
 	signal tdm_tx_valid : std_logic := '0';
-	signal tdm_tx_afull : std_logic := '0';
 
 begin
 
@@ -71,16 +70,13 @@ begin
 	trig_out_logic_uut : entity work.TriggerOutLogic
 	port map
 	(
-		USER_CLK   => clk_user,
-
 		-- These clocks are usually generated from an MMCM driven by the CFG_CCLK.
 		CLK_100MHZ => clk100_tdm,
 		CLK_400MHZ => clk400_tdm,
 		RESET      => rst_tdm,
 
 		TRIG_TX    => tdm_tx,
-		TRIG_WR    => tdm_tx_valid,
-		TRIG_AFULL => tdm_tx_afull,
+		TRIG_VALID => tdm_tx_valid,
 
 		TRIG_CLKP  => twisted_pair_a_p,
 		TRIG_CLKN  => twisted_pair_a_n,
