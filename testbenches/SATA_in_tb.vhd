@@ -89,10 +89,12 @@ begin
 
 		-- Give some time for reset
 		rst_tdm <= '1';
-		wait for 30 ns;
+		wait for 50 ns;
+		wait until rising_edge(clk_user);
 		rst_tdm <= '0';
+
 		wait until aps2_locked = '1';
-		wait for 100 ns;
+		wait for 160 ns;
 
 		-- Throw some data through the twisted pairs
 		for i in 0 to 7 loop
