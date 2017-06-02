@@ -333,6 +333,18 @@ begin
   generic map(RESET_VALUE => '1')
   port map(rst => RESET or (not TrigLocked), clk => TRIG_100MHZ, data_in => '0', data_out => TrigRst);
 
+  -- combinational assignment of SlipData
+  with SlipCnt(2 downto 0) select SlipData <=
+    DataA(7 downto 0)                      when "000",
+    DataA(6 downto 0) & SerDat(7)          when "001",
+    DataA(5 downto 0) & SerDat(7 downto 6) when "010",
+    DataA(4 downto 0) & SerDat(7 downto 5) when "011",
+    DataA(3 downto 0) & SerDat(7 downto 4) when "100",
+    DataA(2 downto 0) & SerDat(7 downto 3) when "101",
+    DataA(1 downto 0) & SerDat(7 downto 2) when "110",
+    DataA(0)          & SerDat(7 downto 1) when "111",
+    x"ff"                                  when others;
+
   -- Clock alignment state machine
   process(TRIG_100MHZ, TrigRst)
   begin
@@ -356,7 +368,6 @@ begin
       DataA <= x"00";
       ClkA <= x"00";
       ClkB <= x"00";
-      SlipData <= x"00";
       SlipClk <= x"00";
     elsif rising_edge(TRIG_100MHZ) then
       -- Increment stable counter by default
@@ -368,18 +379,6 @@ begin
 
       -- ISERDES2 Bitslip doesn't seem to work for DDR 8:1, so do the slip in logic
       DataA <= SerDat;
-
-      case SlipCnt(2 downto 0) is
-        when "000" => SlipData <= DataA(7 downto 0);
-        when "001" => SlipData <= DataA(6 downto 0) & SerDat(7);
-        when "010" => SlipData <= DataA(5 downto 0) & SerDat(7 downto 6);
-        when "011" => SlipData <= DataA(4 downto 0) & SerDat(7 downto 5);
-        when "100" => SlipData <= DataA(3 downto 0) & SerDat(7 downto 4);
-        when "101" => SlipData <= DataA(2 downto 0) & SerDat(7 downto 3);
-        when "110" => SlipData <= DataA(1 downto 0) & SerDat(7 downto 2);
-        when "111" => SlipData <= DataA(0)          & SerDat(7 downto 1);
-        when others => null;
-      end case;
 
       ClkA <= SerClk;
       ClkB <= ClkA;
