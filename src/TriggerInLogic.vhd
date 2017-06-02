@@ -246,14 +246,14 @@ begin
   port map
   (
     O            => TRGCLK_IN_O, -- Udelayed clock to MMCM
-    Q1           => SerClk(0),
-    Q2           => SerClk(1),
-    Q3           => SerClk(2),
-    Q4           => SerClk(3),
-    Q5           => SerClk(4),
-    Q6           => SerClk(5),
-    Q7           => SerClk(6),
-    Q8           => SerClk(7),
+    Q1           => SerClk(7),   -- Note that the first received value is wired to Q8
+    Q2           => SerClk(6),   -- We sent data LSB first, so this assignment ordering
+    Q3           => SerClk(5),   -- preserves the bit order
+    Q4           => SerClk(4),
+    Q5           => SerClk(3),
+    Q6           => SerClk(2),
+    Q7           => SerClk(1),
+    Q8           => SerClk(0),
     SHIFTOUT1    => open ,
     SHIFTOUT2    => open ,
     BITSLIP      => '0', -- Not used since it does not function as expected
@@ -299,14 +299,14 @@ begin
   port map
   (
     O            => open,  -- 1-bit output: Combinatorial output
-    Q1           => SerDat(0),
-    Q2           => SerDat(1),
-    Q3           => SerDat(2),
-    Q4           => SerDat(3),
-    Q5           => SerDat(4),
-    Q6           => SerDat(5),
-    Q7           => SerDat(6),
-    Q8           => SerDat(7),
+    Q1           => SerDat(7),
+    Q2           => SerDat(6),
+    Q3           => SerDat(5),
+    Q4           => SerDat(4),
+    Q5           => SerDat(3),
+    Q6           => SerDat(2),
+    Q7           => SerDat(1),
+    Q8           => SerDat(0),
     SHIFTOUT1    => open ,
     SHIFTOUT2    => open ,
     BITSLIP      => '0', -- Not used since it does not function as expected
