@@ -63,6 +63,16 @@ signal SerDatOut   : std_logic_vector(15 downto 0);
 
 signal dTRIG_VALID : std_logic;
 
+function reverse(a: in std_logic_vector) return std_logic_vector is
+  variable result: std_logic_vector(a'range);
+  alias aa: std_logic_vector(a'reverse_range) is a;
+begin
+  for i in aa'range loop
+    result(i) := aa(i);
+  end loop;
+  return result;
+end; -- function reverse
+
 begin
 
   -- Connect serial output vectors to output pins
@@ -74,6 +84,8 @@ begin
   -- Data sent externally LSB first. Bits are swapped so that the trigger is readable on a scope.
   -- On receive, the data is swapped again so that it ends up the the correct order at the output of the trigger receive FIFO
   -- 4 LS bits set for clock.  Reads as parallel 0xF0 at the receiver
+
+  -- Note: SelectIO wizard IP internally assigns the LSB to D1 of the OSERDESE2
 
   SCLK1 : entity work.SEROUT8
   port map
@@ -93,15 +105,7 @@ begin
     data_out_to_pins_n   => DatOutN,
     clk_in               => CLK_400MHZ,
     clk_div_in           => CLK_100MHZ,
-    -- data_out_from_device(0 to 7) => SerTrigOut, -- Swapped Trigger Byte
-    data_out_from_device(0) => SerTrigOut(0),
-    data_out_from_device(1) => SerTrigOut(1),
-    data_out_from_device(2) => SerTrigOut(2),
-    data_out_from_device(3) => SerTrigOut(3),
-    data_out_from_device(4) => SerTrigOut(4),
-    data_out_from_device(5) => SerTrigOut(5),
-    data_out_from_device(6) => SerTrigOut(6),
-    data_out_from_device(7) => SerTrigOut(7),
+    data_out_from_device => reverse(SerTrigOut), -- Swapped Trigger Byte
     io_reset             => RESET
   );
 
