@@ -94,7 +94,6 @@ signal TrigOvfl     : std_logic;
 signal SlipCnt      : std_logic_vector(3 downto 0);
 
 signal DataA : std_logic_vector(7 downto 0);
-signal DataB : std_logic_vector(7 downto 0);
 signal ClkA  : std_logic_vector(7 downto 0);
 signal ClkB  : std_logic_vector(7 downto 0);
 signal SlipData : std_logic_vector(7 downto 0);
@@ -355,7 +354,6 @@ begin
       TrigDone <= '0';
       SlipCnt <= "0000";
       DataA <= x"00";
-      DataB <= x"00";
       ClkA <= x"00";
       ClkB <= x"00";
       SlipData <= x"00";
@@ -370,17 +368,16 @@ begin
 
       -- ISERDES2 Bitslip doesn't seem to work for DDR 8:1, so do the slip in logic
       DataA <= SerDat;
-      DataB <= DataA;
 
       case SlipCnt(2 downto 0) is
-        when "000" => SlipData <= DataB(7 downto 0);
-        when "001" => SlipData <= DataB(6 downto 0) & DataA(7);
-        when "010" => SlipData <= DataB(5 downto 0) & DataA(7 downto 6);
-        when "011" => SlipData <= DataB(4 downto 0) & DataA(7 downto 5);
-        when "100" => SlipData <= DataB(3 downto 0) & DataA(7 downto 4);
-        when "101" => SlipData <= DataB(2 downto 0) & DataA(7 downto 3);
-        when "110" => SlipData <= DataB(1 downto 0) & DataA(7 downto 2);
-        when "111" => SlipData <= DataB(0)          & DataA(7 downto 1);
+        when "000" => SlipData <= DataA(7 downto 0);
+        when "001" => SlipData <= DataA(6 downto 0) & SerDat(7);
+        when "010" => SlipData <= DataA(5 downto 0) & SerDat(7 downto 6);
+        when "011" => SlipData <= DataA(4 downto 0) & SerDat(7 downto 5);
+        when "100" => SlipData <= DataA(3 downto 0) & SerDat(7 downto 4);
+        when "101" => SlipData <= DataA(2 downto 0) & SerDat(7 downto 3);
+        when "110" => SlipData <= DataA(1 downto 0) & SerDat(7 downto 2);
+        when "111" => SlipData <= DataA(0)          & SerDat(7 downto 1);
         when others => null;
       end case;
 
