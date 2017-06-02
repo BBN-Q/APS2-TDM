@@ -123,7 +123,6 @@ architecture behavior of TDM_top is
 	type BYTE_ARRAY is array (0 to 8) of std_logic_vector(7 downto 0);
 	signal TrigOutDat     : BYTE_ARRAY;
 	signal TrigWr         : std_logic_vector(8 downto 0);
-	signal TrigOutFull    : std_logic_vector(8 downto 0);
 
 	signal TrigInDat      : std_logic_vector(7 downto 0);
 	signal TrigClkErr     : std_logic;
@@ -398,7 +397,7 @@ begin
 			else
 				TrigOutDat <= (others => '0' & CMP(6 downto 0));
 			end if;
-			if rst_sata = '1' or or_reduce(TrigOutFull) = '1' then
+			if rst_sata = '1' then
 				TrigWr <= (others => '0');
 			else
 				TrigWr <= (others => ext_valid_re or trigger);
@@ -424,8 +423,6 @@ begin
 		TOLX : entity work.TriggerOutLogic
 		port map
 		(
-			USER_CLK   => clk_100,
-
 			-- These clocks are driven by SYS_MMCM, and thus are locked to the 10 MHz
 			-- reference (if present), or the SFP clock.
 			CLK_100MHZ => clk_100,
@@ -433,8 +430,7 @@ begin
 			RESET      => rst_sata,
 
 			TRIG_TX    => TrigOutDat(i),
-			TRIG_WR    => TrigWr(i),
-			TRIG_AFULL => TrigOutFull(i),
+			TRIG_VALID => TrigWr(i),
 
 			TRIG_CLKP  => trgclk_outp(i),
 			TRIG_CLKN  => trgclk_outn(i),
@@ -481,7 +477,7 @@ begin
 
 	-- wire out status registers
 	SATA_status(8 downto 0) <= TrigWr;
-	SATA_status(17 downto 9) <= TrigOutFull;
+	SATA_status(17 downto 9) <= (others => '0');
 	SATA_status(20) <= ext_valid;
 	SATA_status(24) <= TrigLocked;
 	SATA_status(25) <= TrigClkErr;
