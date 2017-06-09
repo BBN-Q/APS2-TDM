@@ -1,3 +1,10 @@
+# Version 1.1
+
+## Changes
+* Removes FIFO from SATA output interface, since USER_CLK was the same as
+  CLK_100MHZ. This lowers the SATA interface latency by 100ns.
+* Reverses bit ordering of clk and data in the SATA interface.
+
 # Version 1.0
 
 ## Features
