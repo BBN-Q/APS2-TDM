@@ -101,15 +101,7 @@ signal SlipClk : std_logic_vector(7 downto 0);
 
 begin
 
-  DbgTrigState <= "000" when TrigState = TRIG_START
-             else "001" when TrigState = TRIG_CHK_STABLE
-             else "010" when TrigState = TRIG_NEXT_DLY
-             else "011" when TrigState = TRIG_CHK_DLY
-             else "100" when TrigState = TRIG_RESTART
-             else "101" when TrigState = TRIG_SET_DLY
-             else "110" when TrigState = TRIG_ALIGN
-             else "111" when TrigState = TRIG_DONE
-             else "000";
+  DbgTrigState <= std_logic_vector(to_unsigned(TRIG_STATE'pos(TrigState), 3));
 
   -- Buffer Received Clock
   BTC1 : IBUFDS
