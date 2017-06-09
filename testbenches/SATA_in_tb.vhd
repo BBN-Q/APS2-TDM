@@ -97,7 +97,7 @@ begin
 		wait for 160 ns;
 
 		-- Throw some data through the twisted pairs
-		for i in 0 to 7 loop
+		for i in 0 to 15 loop
 			wait until rising_edge(clk_user);
 			tdm_tx <= std_logic_vector(to_unsigned(i, 8));
 			tdm_tx_valid <= '1';
