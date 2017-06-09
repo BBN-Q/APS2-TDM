@@ -15,8 +15,8 @@ architecture Behavioral of SATA_in_tb is
 	constant clk200_period: time := 5 ns;
 	constant clk400_period: time := 2.5 ns;
 
-	signal clk_user, clk_sata     : std_logic := '0';
-	signal clk400_tdm, clk200_tdm, clk100_tdm : std_logic := '0';
+	signal clk_user     : std_logic := '1';
+	signal clk400_tdm, clk200_tdm, clk100_tdm : std_logic := '1';
 	signal stop_the_clock         : boolean;
 
 	signal rst_tdm           : std_logic := '0';
@@ -35,7 +35,6 @@ architecture Behavioral of SATA_in_tb is
 	signal aps2_rx     : std_logic_vector(7 downto 0) := (others => '0');
 
 	signal tdm_tx_valid : std_logic := '0';
-	signal tdm_tx_afull : std_logic := '0';
 
 begin
 
@@ -52,7 +51,7 @@ begin
 	(
 		USER_CLK   =>  clk_user,     -- Clock for the output side of the FIFO
 		CLK_200MHZ =>  clk200_tdm,   -- Delay calibration clock
-		RESET      =>  rst_tdm,      -- Asynchronous reset for the trigger logic and FIFO
+		RESET      =>  rst_tdm,      -- Reset for the trigger logic and FIFO
 
 		TRIG_CLKP  =>  twisted_pair_a_p,  -- 100MHz Serial Clock, clocks input side of FIFO
 		TRIG_CLKN  =>  twisted_pair_a_n,
@@ -71,16 +70,13 @@ begin
 	trig_out_logic_uut : entity work.TriggerOutLogic
 	port map
 	(
-		USER_CLK   => clk_user,
-
 		-- These clocks are usually generated from an MMCM driven by the CFG_CCLK.
 		CLK_100MHZ => clk100_tdm,
 		CLK_400MHZ => clk400_tdm,
 		RESET      => rst_tdm,
 
 		TRIG_TX    => tdm_tx,
-		TRIG_WR    => tdm_tx_valid,
-		TRIG_AFULL => tdm_tx_afull,
+		TRIG_VALID => tdm_tx_valid,
 
 		TRIG_CLKP  => twisted_pair_a_p,
 		TRIG_CLKN  => twisted_pair_a_n,
@@ -93,19 +89,22 @@ begin
 
 		-- Give some time for reset
 		rst_tdm <= '1';
-		wait for 30 ns;
+		wait for 50 ns;
+		wait until rising_edge(clk_user);
 		rst_tdm <= '0';
+
 		wait until aps2_locked = '1';
-		wait for 500 ns;
+		wait for 160 ns;
 
 		-- Throw some data through the twisted pairs
-		for i in 1 to 4 loop
+		for i in 0 to 7 loop
 			wait until rising_edge(clk_user);
 			tdm_tx <= std_logic_vector(to_unsigned(i, 8));
 			tdm_tx_valid <= '1';
 		end loop;
 
 		-- Turn off transmission and wait.
+		wait until rising_edge(clk_user);
 		tdm_tx_valid <= '0';
 		wait for 1000 ns;
 

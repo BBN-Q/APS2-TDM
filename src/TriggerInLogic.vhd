@@ -94,7 +94,6 @@ signal TrigOvfl     : std_logic;
 signal SlipCnt      : std_logic_vector(3 downto 0);
 
 signal DataA : std_logic_vector(7 downto 0);
-signal DataB : std_logic_vector(7 downto 0);
 signal ClkA  : std_logic_vector(7 downto 0);
 signal ClkB  : std_logic_vector(7 downto 0);
 signal SlipData : std_logic_vector(7 downto 0);
@@ -102,17 +101,9 @@ signal SlipClk : std_logic_vector(7 downto 0);
 
 begin
 
-  DbgTrigState <= "000" when TrigState = TRIG_START
-             else "001" when TrigState = TRIG_CHK_STABLE
-             else "010" when TrigState = TRIG_NEXT_DLY
-             else "011" when TrigState = TRIG_CHK_DLY
-             else "100" when TrigState = TRIG_RESTART
-             else "101" when TrigState = TRIG_SET_DLY
-             else "110" when TrigState = TRIG_ALIGN
-             else "111" when TrigState = TRIG_DONE
-             else "000";
+  DbgTrigState <= std_logic_vector(to_unsigned(TRIG_STATE'pos(TrigState), 3));
 
-  -- Trigger 1 Received Clock
+  -- Buffer Received Clock
   BTC1 : IBUFDS
   generic map
   (
@@ -126,7 +117,7 @@ begin
     IB => TRIG_CLKN  -- Diff_n buffer input (connect directly to top-level port)
   );
 
-  -- Trigger 1 Received Data
+  -- Buffer Received Data
   BTD1 : IBUFDS
   generic map
   (
@@ -246,14 +237,14 @@ begin
   port map
   (
     O            => TRGCLK_IN_O, -- Udelayed clock to MMCM
-    Q1           => SerClk(0),
-    Q2           => SerClk(1),
-    Q3           => SerClk(2),
-    Q4           => SerClk(3),
-    Q5           => SerClk(4),
-    Q6           => SerClk(5),
-    Q7           => SerClk(6),
-    Q8           => SerClk(7),
+    Q1           => SerClk(7),   -- Note that the first received value is wired to Q8
+    Q2           => SerClk(6),   -- We sent data LSB first, so this assignment ordering
+    Q3           => SerClk(5),   -- preserves the bit order
+    Q4           => SerClk(4),
+    Q5           => SerClk(3),
+    Q6           => SerClk(2),
+    Q7           => SerClk(1),
+    Q8           => SerClk(0),
     SHIFTOUT1    => open ,
     SHIFTOUT2    => open ,
     BITSLIP      => '0', -- Not used since it does not function as expected
@@ -299,14 +290,14 @@ begin
   port map
   (
     O            => open,  -- 1-bit output: Combinatorial output
-    Q1           => SerDat(0),
-    Q2           => SerDat(1),
-    Q3           => SerDat(2),
-    Q4           => SerDat(3),
-    Q5           => SerDat(4),
-    Q6           => SerDat(5),
-    Q7           => SerDat(6),
-    Q8           => SerDat(7),
+    Q1           => SerDat(7),
+    Q2           => SerDat(6),
+    Q3           => SerDat(5),
+    Q4           => SerDat(4),
+    Q5           => SerDat(3),
+    Q6           => SerDat(2),
+    Q7           => SerDat(1),
+    Q8           => SerDat(0),
     SHIFTOUT1    => open ,
     SHIFTOUT2    => open ,
     BITSLIP      => '0', -- Not used since it does not function as expected
@@ -334,6 +325,18 @@ begin
   generic map(RESET_VALUE => '1')
   port map(rst => RESET or (not TrigLocked), clk => TRIG_100MHZ, data_in => '0', data_out => TrigRst);
 
+  -- combinational assignment of SlipData
+  with SlipCnt(2 downto 0) select SlipData <=
+    DataA(7 downto 0)                      when "000",
+    DataA(6 downto 0) & SerDat(7)          when "001",
+    DataA(5 downto 0) & SerDat(7 downto 6) when "010",
+    DataA(4 downto 0) & SerDat(7 downto 5) when "011",
+    DataA(3 downto 0) & SerDat(7 downto 4) when "100",
+    DataA(2 downto 0) & SerDat(7 downto 3) when "101",
+    DataA(1 downto 0) & SerDat(7 downto 2) when "110",
+    DataA(0)          & SerDat(7 downto 1) when "111",
+    x"ff"                                  when others;
+
   -- Clock alignment state machine
   process(TRIG_100MHZ, TrigRst)
   begin
@@ -355,10 +358,8 @@ begin
       TrigDone <= '0';
       SlipCnt <= "0000";
       DataA <= x"00";
-      DataB <= x"00";
       ClkA <= x"00";
       ClkB <= x"00";
-      SlipData <= x"00";
       SlipClk <= x"00";
     elsif rising_edge(TRIG_100MHZ) then
       -- Increment stable counter by default
@@ -370,19 +371,6 @@ begin
 
       -- ISERDES2 Bitslip doesn't seem to work for DDR 8:1, so do the slip in logic
       DataA <= SerDat;
-      DataB <= DataA;
-
-      case SlipCnt(2 downto 0) is
-        when "000" => SlipData <= DataB(7 downto 0);
-        when "001" => SlipData <= DataB(6 downto 0) & DataA(7);
-        when "010" => SlipData <= DataB(5 downto 0) & DataA(7 downto 6);
-        when "011" => SlipData <= DataB(4 downto 0) & DataA(7 downto 5);
-        when "100" => SlipData <= DataB(3 downto 0) & DataA(7 downto 4);
-        when "101" => SlipData <= DataB(2 downto 0) & DataA(7 downto 3);
-        when "110" => SlipData <= DataB(1 downto 0) & DataA(7 downto 2);
-        when "111" => SlipData <= DataB(0)          & DataA(7 downto 1);
-        when others => null;
-      end case;
 
       ClkA <= SerClk;
       ClkB <= ClkA;
@@ -535,8 +523,9 @@ begin
 
           TrigDat <= SlipData;  -- Save data for possible FIFO write
 
-          -- Write non-zero value to the trigger receive FIFO
-          if SlipData /= 0 then
+          -- We send 0xFF to indicate "no data", write non-0xFF values to the
+          -- trigger receive FIFO
+          if SlipData /= x"ff" then
             if TrigFull = '0' then
               TrigValid <= '1';   -- Enable write in next cycle
             else
